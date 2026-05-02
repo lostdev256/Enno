@@ -2,8 +2,9 @@
   "name": "enno",
   "version": "1.0.0",
   "description": "A visual narrative design tool for non-linear storytelling, branching plots, and complex dialogues.",
-  "main": "index.js",
+  "main": "src/core/main.js",
   "scripts": {
+    "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,6 +20,6 @@
   },
   "homepage": "https://github.com/lostdev256/Enno#readme",
   "devDependencies": {
-    "electron": "^41.5.0"
+    "electron": "latest"
   }
 }
