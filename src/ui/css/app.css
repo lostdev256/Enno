@@ -1,0 +1,21 @@
+body,
+html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: sans-serif;
+}
+
+#toolbar {
+    height: 40px;
+    background: #333;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+}
+
+#mainCanvas {
+    display: block;
+    background-color: #f0f0f0;
+}
