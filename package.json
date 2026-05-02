@@ -1,0 +1,24 @@
+{
+  "name": "enno",
+  "version": "1.0.0",
+  "description": "A visual narrative design tool for non-linear storytelling, branching plots, and complex dialogues.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lostdev256/Enno.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/lostdev256/Enno/issues"
+  },
+  "homepage": "https://github.com/lostdev256/Enno#readme",
+  "devDependencies": {
+    "electron": "^41.5.0"
+  }
+}
