@@ -71,7 +71,7 @@ onUnmounted(() => {
 
           <div class="lb-image-wrap">
             <img
-              :src="'file://' + images[currentIndex]"
+              :src="'enno://' + images[currentIndex]"
               :alt="`Image ${currentIndex + 1}`"
               class="lb-image"
             />

@@ -18,7 +18,9 @@ const menus: MenuGroup[] = [
   {
     label: 'File',
     items: [
+      { label: 'Create', action: 'file:create', shortcut: '⌘N' },
       { label: 'Open', action: 'file:open', shortcut: '⌘O' },
+      { separator: true, label: '' },
       { label: 'Save', action: 'file:save', shortcut: '⌘S' },
       { label: 'Save As', action: 'file:save-as', shortcut: '⇧⌘S' },
     ],

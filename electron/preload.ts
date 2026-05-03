@@ -18,9 +18,6 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
         const [channel, ...omit] = args
         return ipcRenderer.invoke(channel, ...omit)
     },
-
-    // You can expose other APTs you need here.
-    // ...
 })
 
 // --------- Enno-specific API ---------
@@ -32,6 +29,25 @@ contextBridge.exposeInMainWorld('ennoAPI', {
     /** Invoke a backend handler for a menu action */
     invokeMenuAction(action: string) {
         return ipcRenderer.invoke(action)
+    },
+
+    // --------- Project State ---------
+    onProjectStateChange(callback: (state: { isOpen: boolean, filePath: string | null, projectName: string | null }) => void) {
+        ipcRenderer.on('project:state-changed', (_event, state) => callback(state))
+    },
+
+    // --------- File Operations ---------
+    createProject() {
+        return ipcRenderer.invoke('file:create')
+    },
+    openProject() {
+        return ipcRenderer.invoke('file:open')
+    },
+    saveProject() {
+        return ipcRenderer.invoke('file:save')
+    },
+    saveProjectAs() {
+        return ipcRenderer.invoke('file:save-as')
     },
 
     // --------- Characters API ---------
@@ -72,7 +88,7 @@ contextBridge.exposeInMainWorld('ennoAPI', {
     addGalleryImages(characterId: string) {
         return ipcRenderer.invoke('characters:gallery:add', characterId)
     },
-    removeGalleryImage(characterId: string, imageIndex: number) {
-        return ipcRenderer.invoke('characters:gallery:remove', characterId, imageIndex)
+    removeGalleryImage(characterId: string, imageId: string) {
+        return ipcRenderer.invoke('characters:gallery:remove', characterId, imageId)
     },
 })

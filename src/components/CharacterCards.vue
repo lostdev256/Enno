@@ -24,7 +24,7 @@ interface CharacterFull {
   name: string
   description: string
   avatarUrl: string | null
-  gallery: string[]
+  gallery: { id: string; path: string }[]
 }
 
 // --- State ---
@@ -181,16 +181,28 @@ async function addGalleryImages(id: string) {
   }
 }
 
-async function removeGalleryImage(id: string, index: number) {
-  await window.ennoAPI.removeGalleryImage(id, index)
-  if (selectedId.value === id) {
-    await loadCharacter(id)
+async function removeGalleryImage(characterId: string, imageId: string) {
+  await window.ennoAPI.removeGalleryImage(characterId, imageId)
+  if (selectedId.value === characterId) {
+    await loadCharacter(characterId)
   }
 }
 
 // --- Init ---
 onMounted(() => {
   loadList()
+
+  // Reload when project changes (open/close)
+  window.ennoAPI.onProjectStateChange((state) => {
+    if (state.isOpen) {
+      loadList()
+    } else {
+      groups.value = []
+      ungrouped.value = []
+      selectedId.value = null
+      selectedCharacter.value = null
+    }
+  })
 })
 </script>
 

@@ -16,11 +16,17 @@
         "@tiptap/extension-underline": "^3.22.5",
         "@tiptap/starter-kit": "^3.22.5",
         "@tiptap/vue-3": "^3.22.5",
+        "adm-zip": "^0.5.17",
+        "better-sqlite3": "^12.9.0",
+        "electron-store": "^11.0.2",
         "konva": "^10.3.0",
         "vue": "^3.4.21",
         "vuedraggable": "^4.1.0"
     },
     "devDependencies": {
+        "@electron/rebuild": "^4.0.4",
+        "@types/adm-zip": "^0.5.8",
+        "@types/better-sqlite3": "^7.6.13",
         "@vitejs/plugin-vue": "^5.0.4",
         "electron": "^30.0.1",
         "electron-builder": "^24.13.3",

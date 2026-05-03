@@ -17,7 +17,7 @@ interface CharacterFull {
   name: string
   description: string
   avatarUrl: string | null
-  gallery: string[]
+  gallery: { id: string; path: string }[]
 }
 
 const props = defineProps<{ character: CharacterFull | null }>()
@@ -26,7 +26,7 @@ const emit = defineEmits<{
   (e: 'update', id: string, field: string, value: string): void
   (e: 'upload-avatar', id: string): void
   (e: 'add-gallery', id: string): void
-  (e: 'remove-gallery', id: string, index: number): void
+  (e: 'remove-gallery', characterId: string, imageId: string): void
 }>()
 
 // --- Name editing ---
@@ -130,7 +130,7 @@ function addLink() {
 // --- Avatar ---
 function getAvatarSrc(url: string | null): string {
   if (!url) return defaultAvatar
-  return url.startsWith('file://') ? url : `file://${url}`
+  return `enno://${url}`
 }
 
 // --- Gallery ---
@@ -142,18 +142,18 @@ function openLightbox(i: number) { lightboxStartIndex.value = i; lightboxVisible
 const galleryCtxVisible = ref(false)
 const galleryCtxX = ref(0)
 const galleryCtxY = ref(0)
-const galleryCtxIndex = ref(-1)
+const galleryCtxImageId = ref<string | null>(null)
 const galleryCtxItems: ContextMenuItem[] = [{ label: 'Remove Image', action: 'remove', icon: '🗑' }]
 
-function onGalleryContextMenu(e: MouseEvent, i: number) {
+function onGalleryContextMenu(e: MouseEvent, imageId: string) {
   e.preventDefault()
   galleryCtxX.value = e.clientX; galleryCtxY.value = e.clientY
-  galleryCtxIndex.value = i; galleryCtxVisible.value = true
+  galleryCtxImageId.value = imageId; galleryCtxVisible.value = true
 }
 
 function onGalleryCtxAction(action: string) {
-  if (action === 'remove' && props.character && galleryCtxIndex.value >= 0)
-    emit('remove-gallery', props.character.id, galleryCtxIndex.value)
+  if (action === 'remove' && props.character && galleryCtxImageId.value)
+    emit('remove-gallery', props.character.id, galleryCtxImageId.value)
 }
 </script>
 
@@ -241,8 +241,8 @@ function onGalleryCtxAction(action: string) {
         </button>
       </div>
       <div class="gallery-strip" v-if="character.gallery.length > 0">
-        <div v-for="(img, i) in character.gallery" :key="i" class="gallery-thumb" @click="openLightbox(i)" @contextmenu="onGalleryContextMenu($event, i)">
-          <img :src="'file://' + img" :alt="`Gallery ${i + 1}`" />
+        <div v-for="(img, i) in character.gallery" :key="img.id" class="gallery-thumb" @click="openLightbox(i)" @contextmenu="onGalleryContextMenu($event, img.id)">
+          <img :src="'enno://' + img.path" :alt="`Gallery ${i + 1}`" />
         </div>
         <button class="gallery-add-btn" @click="emit('add-gallery', character.id)" title="Add more">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -257,7 +257,7 @@ function onGalleryCtxAction(action: string) {
     </div>
 
     <ContextMenu :items="galleryCtxItems" :x="galleryCtxX" :y="galleryCtxY" :visible="galleryCtxVisible" @action="onGalleryCtxAction" @close="galleryCtxVisible = false" />
-    <ImageLightbox :images="character.gallery" :start-index="lightboxStartIndex" :visible="lightboxVisible" @close="lightboxVisible = false" />
+    <ImageLightbox :images="character.gallery.map(g => g.path)" :start-index="lightboxStartIndex" :visible="lightboxVisible" @close="lightboxVisible = false" />
   </div>
 
   <!-- Empty state -->

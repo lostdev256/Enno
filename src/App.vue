@@ -6,36 +6,89 @@ import { ref, onMounted } from 'vue'
 type PageName = 'welcome' | 'characters-cards' | 'characters-links'
 
 const currentPage = ref<PageName>('welcome')
+const projectOpen = ref(false)
+const projectName = ref<string | null>(null)
 
 onMounted(() => {
+  // Listen for project state changes from backend
+  window.ennoAPI.onProjectStateChange((state) => {
+    projectOpen.value = state.isOpen
+    projectName.value = state.projectName
+
+    // If project just opened and we're on welcome, stay — user navigates via menu
+    // If project closed, go back to welcome
+    if (!state.isOpen) {
+      currentPage.value = 'welcome'
+    }
+  })
+
   // Listen for menu actions from the native Electron menu
   window.ennoAPI.onMenuAction((action: string) => {
     console.log(`[App] Received menu action: ${action}`)
 
     switch (action) {
+      // File actions — delegate to IPC
+      case 'file:create':
+        window.ennoAPI.createProject()
+        break
+      case 'file:open':
+        window.ennoAPI.openProject()
+        break
+      case 'file:save':
+        window.ennoAPI.saveProject()
+        break
+      case 'file:save-as':
+        window.ennoAPI.saveProjectAs()
+        break
+
+      // Navigation actions
       case 'characters:cards':
-        currentPage.value = 'characters-cards'
+        if (projectOpen.value) currentPage.value = 'characters-cards'
         break
       case 'characters:links':
-        currentPage.value = 'characters-links'
+        if (projectOpen.value) currentPage.value = 'characters-links'
         break
+
       default:
-        // Call the corresponding IPC handler for non-navigation actions
         window.ennoAPI.invokeMenuAction(action)
     }
   })
 })
+
+function handleNavigate(page: string) {
+  // File actions from MenuBar
+  if (page.startsWith('file:')) return // handled via IPC above
+
+  if (!projectOpen.value && (page === 'characters-cards' || page === 'characters-links')) {
+    return // Can't navigate to data pages without a project
+  }
+  currentPage.value = page as PageName
+}
 </script>
 
 <template>
   <div id="app-root">
-    <MenuBar @navigate="(page: string) => currentPage = page as PageName" />
+    <MenuBar @navigate="handleNavigate" />
     <main class="app-content">
       <!-- Welcome -->
       <div v-if="currentPage === 'welcome'" class="welcome-area">
         <h1 class="app-title">Enno</h1>
         <p class="app-subtitle">Character & Story Editor</p>
-        <p class="app-hint">Open <strong>Characters → Cards</strong> to get started</p>
+
+        <div v-if="!projectOpen" class="welcome-actions">
+          <button class="welcome-btn primary" @click="window.ennoAPI.createProject()">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Create Project
+          </button>
+          <button class="welcome-btn" @click="window.ennoAPI.openProject()">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 7V5a2 2 0 012-2h3l2 2h3a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Open Project
+          </button>
+        </div>
+
+        <p v-else class="app-hint">
+          <strong>{{ projectName }}</strong> — open <strong>Characters → Cards</strong> to start
+        </p>
       </div>
 
       <!-- Characters: Cards -->
@@ -106,6 +159,47 @@ onMounted(() => {
 
 .app-hint strong {
   color: #818cf8;
+}
+
+/* Welcome action buttons */
+.welcome-actions {
+  margin-top: 32px;
+  display: flex;
+  gap: 12px;
+}
+
+.welcome-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #999;
+}
+
+.welcome-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ccc;
+}
+
+.welcome-btn.primary {
+  background: rgba(100, 108, 255, 0.15);
+  border-color: rgba(100, 108, 255, 0.25);
+  color: #a5b4fc;
+}
+
+.welcome-btn.primary:hover {
+  background: rgba(100, 108, 255, 0.25);
+  border-color: rgba(100, 108, 255, 0.4);
+  color: #c7d2fe;
 }
 
 @keyframes fadeIn {

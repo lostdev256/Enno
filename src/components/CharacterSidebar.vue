@@ -133,7 +133,7 @@ function onCtxAction(action: string) {
 
 function getAvatarSrc(url: string | null): string {
   if (!url) return defaultAvatar
-  return url.startsWith('/') || url.startsWith('file://') ? `file://${url}` : url
+  return `enno://${url}`
 }
 </script>
 
