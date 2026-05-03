@@ -352,6 +352,64 @@ ipcMain.handle('characters:gallery:remove', async (_event, _characterId: string,
     return { success: ok }
 })
 
+// --------- Board & Links Handlers ---------
+
+ipcMain.handle('characters:board:get', async () => {
+    if (!db.isOpen) return null
+    return db.getBoardData()
+})
+
+ipcMain.handle('characters:board:addNode', async (_event, characterId: string, x: number, y: number) => {
+    if (!db.isOpen) return false
+    return db.addBoardNode(characterId, x, y)
+})
+
+ipcMain.handle('characters:board:updateNodePosition', async (_event, characterId: string, x: number, y: number) => {
+    if (!db.isOpen) return false
+    return db.updateBoardNode(characterId, x, y)
+})
+
+ipcMain.handle('characters:board:removeNode', async (_event, characterId: string) => {
+    if (!db.isOpen) return false
+    return db.removeBoardNode(characterId)
+})
+
+ipcMain.handle('characters:linkModes:create', async (_event, name: string, maxLinks: number, dataType: 'text' | 'enum', settings: string) => {
+    if (!db.isOpen) return null
+    return db.createLinkMode(name, maxLinks, dataType, settings)
+})
+
+ipcMain.handle('characters:linkModes:update', async (_event, id: string, name: string, maxLinks: number, dataType: 'text' | 'enum', settings: string) => {
+    if (!db.isOpen) return false
+    return db.updateLinkMode(id, name, maxLinks, dataType, settings)
+})
+
+ipcMain.handle('characters:linkModes:delete', async (_event, id: string) => {
+    if (!db.isOpen) return false
+    return db.deleteLinkMode(id)
+})
+
+ipcMain.handle('characters:linkModes:reorder', async (_event, modeIds: string[]) => {
+    if (!db.isOpen) return false
+    db.reorderLinkModes(modeIds)
+    return true
+})
+
+ipcMain.handle('characters:links:create', async (_event, modeId: string, sourceId: string, targetId: string, value: string) => {
+    if (!db.isOpen) return null
+    return db.createLink(modeId, sourceId, targetId, value)
+})
+
+ipcMain.handle('characters:links:update', async (_event, id: string, value: string) => {
+    if (!db.isOpen) return false
+    return db.updateLink(id, value)
+})
+
+ipcMain.handle('characters:links:delete', async (_event, id: string) => {
+    if (!db.isOpen) return false
+    return db.deleteLink(id)
+})
+
 // --------- App Ready ---------
 
 app.whenReady().then(() => {

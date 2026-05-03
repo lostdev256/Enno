@@ -114,8 +114,11 @@ watch(() => props.character?.description, (newDesc) => {
 onBeforeUnmount(() => { editor.value?.destroy() })
 
 // --- Toolbar helpers ---
-function isActive(name: string, attrs?: Record<string, any>) {
-  return editor.value?.isActive(name, attrs) ?? false
+function isActive(nameOrAttrs: string | Record<string, any>, attrs?: Record<string, any>) {
+  if (typeof nameOrAttrs === 'string') {
+    return editor.value?.isActive(nameOrAttrs, attrs) ?? false
+  }
+  return editor.value?.isActive(nameOrAttrs) ?? false
 }
 
 function addLink() {

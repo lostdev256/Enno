@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import MenuBar from './components/MenuBar.vue'
 import CharacterCards from './components/CharacterCards.vue'
+import CharacterLinks from './components/CharacterLinks.vue'
 import { ref, onMounted } from 'vue'
 
 type PageName = 'welcome' | 'characters-cards' | 'characters-links'
@@ -64,6 +65,12 @@ function handleNavigate(page: string) {
   }
   currentPage.value = page as PageName
 }
+function createProject() {
+  window.ennoAPI.createProject()
+}
+function openProject() {
+  window.ennoAPI.openProject()
+}
 </script>
 
 <template>
@@ -76,11 +83,11 @@ function handleNavigate(page: string) {
         <p class="app-subtitle">Character & Story Editor</p>
 
         <div v-if="!projectOpen" class="welcome-actions">
-          <button class="welcome-btn primary" @click="window.ennoAPI.createProject()">
+          <button class="welcome-btn primary" @click="createProject">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             Create Project
           </button>
-          <button class="welcome-btn" @click="window.ennoAPI.openProject()">
+          <button class="welcome-btn" @click="openProject">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 7V5a2 2 0 012-2h3l2 2h3a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Open Project
           </button>
@@ -94,11 +101,8 @@ function handleNavigate(page: string) {
       <!-- Characters: Cards -->
       <CharacterCards v-else-if="currentPage === 'characters-cards'" />
 
-      <!-- Characters: Links (placeholder) -->
-      <div v-else-if="currentPage === 'characters-links'" class="welcome-area">
-        <h1 class="app-title" style="font-size: 2rem;">Links</h1>
-        <p class="app-subtitle">Coming soon</p>
-      </div>
+      <!-- Characters: Links -->
+      <CharacterLinks v-else-if="currentPage === 'characters-links'" />
     </main>
   </div>
 </template>

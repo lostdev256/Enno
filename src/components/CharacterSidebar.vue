@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import draggable from 'vuedraggable'
 import ContextMenu from './ContextMenu.vue'
 import type { ContextMenuItem } from './ContextMenu.vue'
@@ -63,12 +63,6 @@ function onDocClick(e: MouseEvent) {
 }
 
 // --- Drag and drop ---
-// We use local copies for draggable to mutate
-const localGroups = computed({
-  get: () => props.groups,
-  set: () => {}  // handled via events
-})
-
 function onDragEnd() {
   emit('reorder', { groups: props.groups, ungrouped: props.ungrouped })
 }
@@ -134,6 +128,13 @@ function onCtxAction(action: string) {
 function getAvatarSrc(url: string | null): string {
   if (!url) return defaultAvatar
   return `enno://${url}`
+}
+
+function onDragStartCard(e: DragEvent, id: string) {
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('application/enno-character-id', id)
+    e.dataTransfer.effectAllowed = 'copy'
+  }
 }
 </script>
 
@@ -231,6 +232,8 @@ function getAvatarSrc(url: string | null): string {
                   <div
                     class="card-item"
                     :class="{ selected: selectedId === element.id }"
+                    draggable="true"
+                    @dragstart="onDragStartCard($event, element.id)"
                     @click="emit('select', element.id)"
                     @contextmenu.stop="onContextMenu($event, 'character', element.id)"
                   >
@@ -262,6 +265,8 @@ function getAvatarSrc(url: string | null): string {
             <div
               class="card-item"
               :class="{ selected: selectedId === element.id }"
+              draggable="true"
+              @dragstart="onDragStartCard($event, element.id)"
               @click="emit('select', element.id)"
               @contextmenu.stop="onContextMenu($event, 'character', element.id)"
             >

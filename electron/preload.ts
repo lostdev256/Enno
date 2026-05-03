@@ -35,6 +35,9 @@ contextBridge.exposeInMainWorld('ennoAPI', {
     onProjectStateChange(callback: (state: { isOpen: boolean, filePath: string | null, projectName: string | null }) => void) {
         ipcRenderer.on('project:state-changed', (_event, state) => callback(state))
     },
+    offProjectStateChange() {
+        ipcRenderer.removeAllListeners('project:state-changed')
+    },
 
     // --------- File Operations ---------
     createProject() {
@@ -90,5 +93,42 @@ contextBridge.exposeInMainWorld('ennoAPI', {
     },
     removeGalleryImage(characterId: string, imageId: string) {
         return ipcRenderer.invoke('characters:gallery:remove', characterId, imageId)
+    },
+
+    // --------- Board & Links ---------
+    getBoardData() {
+        return ipcRenderer.invoke('characters:board:get')
+    },
+    addBoardNode(characterId: string, x: number, y: number) {
+        return ipcRenderer.invoke('characters:board:addNode', characterId, x, y)
+    },
+    updateBoardNode(characterId: string, x: number, y: number) {
+        return ipcRenderer.invoke('characters:board:updateNodePosition', characterId, x, y)
+    },
+    removeBoardNode(characterId: string) {
+        return ipcRenderer.invoke('characters:board:removeNode', characterId)
+    },
+
+    createLinkMode(name: string, maxLinks: number, dataType: 'text' | 'enum', settings: string) {
+        return ipcRenderer.invoke('characters:linkModes:create', name, maxLinks, dataType, settings)
+    },
+    updateLinkMode(id: string, name: string, maxLinks: number, dataType: 'text' | 'enum', settings: string) {
+        return ipcRenderer.invoke('characters:linkModes:update', id, name, maxLinks, dataType, settings)
+    },
+    deleteLinkMode(id: string) {
+        return ipcRenderer.invoke('characters:linkModes:delete', id)
+    },
+    reorderLinkModes(modeIds: string[]) {
+        return ipcRenderer.invoke('characters:linkModes:reorder', modeIds)
+    },
+
+    createLink(modeId: string, sourceId: string, targetId: string, value: string) {
+        return ipcRenderer.invoke('characters:links:create', modeId, sourceId, targetId, value)
+    },
+    updateLink(id: string, value: string) {
+        return ipcRenderer.invoke('characters:links:update', id, value)
+    },
+    deleteLink(id: string) {
+        return ipcRenderer.invoke('characters:links:delete', id)
     },
 })

@@ -38,6 +38,35 @@ export interface ReorderPayload {
   ungroupedIds: string[]
 }
 
+export interface BoardNode {
+  characterId: string
+  x: number
+  y: number
+}
+
+export interface LinkMode {
+  id: string
+  name: string
+  maxLinksPerPair: number
+  dataType: 'text' | 'enum'
+  settings: string // JSON string
+  sortOrder: number
+}
+
+export interface CharacterLink {
+  id: string
+  modeId: string
+  sourceId: string
+  targetId: string
+  value: string
+}
+
+export interface BoardData {
+  nodes: BoardNode[]
+  modes: LinkMode[]
+  links: CharacterLink[]
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function uuid(): string {
@@ -186,6 +215,33 @@ export class EnnoDatabase {
         sort_order   INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
       );
+
+      CREATE TABLE IF NOT EXISTS character_board_nodes (
+        character_id TEXT PRIMARY KEY,
+        x REAL NOT NULL,
+        y REAL NOT NULL,
+        FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS link_modes (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        max_links_per_pair INTEGER NOT NULL DEFAULT 1,
+        data_type TEXT NOT NULL,
+        settings TEXT NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0
+      );
+
+      CREATE TABLE IF NOT EXISTS character_links (
+        id TEXT PRIMARY KEY,
+        mode_id TEXT NOT NULL,
+        source_id TEXT NOT NULL,
+        target_id TEXT NOT NULL,
+        value TEXT NOT NULL,
+        FOREIGN KEY (mode_id) REFERENCES link_modes(id) ON DELETE CASCADE,
+        FOREIGN KEY (source_id) REFERENCES characters(id) ON DELETE CASCADE,
+        FOREIGN KEY (target_id) REFERENCES characters(id) ON DELETE CASCADE
+      );
     `)
 
     // Insert meta if not exists
@@ -193,6 +249,28 @@ export class EnnoDatabase {
     if (!existing) {
       this.db.prepare('INSERT INTO meta (key, value) VALUES (?, ?)').run('schema_version', '1')
       this.db.prepare('INSERT INTO meta (key, value) VALUES (?, ?)').run('app_version', '0.1.0')
+    }
+
+    // Insert default link modes if table is empty
+    const modesCount = this.db.prepare('SELECT COUNT(*) as c FROM link_modes').get() as { c: number }
+    if (modesCount.c === 0) {
+      const insertMode = this.db.prepare('INSERT INTO link_modes (id, name, max_links_per_pair, data_type, settings, sort_order) VALUES (?, ?, ?, ?, ?, ?)')
+      
+      const attitudesSettings = JSON.stringify({
+        lineType: 'arrow',
+        enumValues: [
+          { id: 'neutral', label: 'Neutral', color: '#9ca3af' },
+          { id: 'hostile', label: 'Hostile', color: '#ef4444' },
+          { id: 'friendly', label: 'Friendly', color: '#22c55e' }
+        ]
+      })
+      insertMode.run('mode-attitudes', 'Attitudes', 2, 'enum', attitudesSettings, 0)
+      
+      const connectionsSettings = JSON.stringify({
+        lineType: 'line',
+        lineColor: '#a5b4fc'
+      })
+      insertMode.run('mode-connections', 'Connections', 1, 'text', connectionsSettings, 1)
     }
   }
 
@@ -494,9 +572,100 @@ export class EnnoDatabase {
       } else {
         const content = fs.readFileSync(fullPath)
         // adm-zip addFile expects the directory path (without filename) as second-ish arg
-        const dir = zipPrefix || ''
         zip.addFile(zipPath, content)
       }
     }
+  }
+
+  // ── Board Nodes ──
+
+  getBoardData(): BoardData {
+    this.ensureOpen()
+    const nodes = this.db!.prepare('SELECT character_id as characterId, x, y FROM character_board_nodes').all() as BoardNode[]
+    const modes = this.db!.prepare('SELECT id, name, max_links_per_pair as maxLinksPerPair, data_type as dataType, settings, sort_order as sortOrder FROM link_modes ORDER BY sort_order').all() as LinkMode[]
+    const links = this.db!.prepare('SELECT id, mode_id as modeId, source_id as sourceId, target_id as targetId, value FROM character_links').all() as CharacterLink[]
+    
+    return { nodes, modes, links }
+  }
+
+  addBoardNode(characterId: string, x: number, y: number): boolean {
+    this.ensureOpen()
+    try {
+      this.db!.prepare('INSERT INTO character_board_nodes (character_id, x, y) VALUES (?, ?, ?)').run(characterId, x, y)
+      return true
+    } catch { return false }
+  }
+
+  updateBoardNode(characterId: string, x: number, y: number): boolean {
+    this.ensureOpen()
+    const res = this.db!.prepare('UPDATE character_board_nodes SET x = ?, y = ? WHERE character_id = ?').run(x, y, characterId)
+    return res.changes > 0
+  }
+
+  removeBoardNode(characterId: string): boolean {
+    this.ensureOpen()
+    const res = this.db!.prepare('DELETE FROM character_board_nodes WHERE character_id = ?').run(characterId)
+    return res.changes > 0
+  }
+
+  // ── Link Modes ──
+
+  createLinkMode(name: string, maxLinks: number, dataType: 'text' | 'enum', settings: string): LinkMode {
+    this.ensureOpen()
+    const id = uuid()
+    const maxOrder = this.db!.prepare('SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM link_modes').get() as { next: number }
+    this.db!.prepare('INSERT INTO link_modes (id, name, max_links_per_pair, data_type, settings, sort_order) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(id, name, maxLinks, dataType, settings, maxOrder.next)
+    return { id, name, maxLinksPerPair: maxLinks, dataType, settings, sortOrder: maxOrder.next }
+  }
+
+  updateLinkMode(id: string, name: string, maxLinks: number, dataType: 'text' | 'enum', settings: string): boolean {
+    this.ensureOpen()
+    const res = this.db!.prepare('UPDATE link_modes SET name = ?, max_links_per_pair = ?, data_type = ?, settings = ? WHERE id = ?')
+      .run(name, maxLinks, dataType, settings, id)
+    return res.changes > 0
+  }
+
+  deleteLinkMode(id: string): boolean {
+    this.ensureOpen()
+    const res = this.db!.prepare('DELETE FROM link_modes WHERE id = ?').run(id)
+    return res.changes > 0
+  }
+  
+  reorderLinkModes(modeIds: string[]): void {
+    this.ensureOpen()
+    const update = this.db!.prepare('UPDATE link_modes SET sort_order = ? WHERE id = ?')
+    const tx = this.db!.transaction(() => {
+      for (let i = 0; i < modeIds.length; i++) {
+        update.run(i, modeIds[i])
+      }
+    })
+    tx()
+  }
+
+  // ── Links ──
+
+  createLink(modeId: string, sourceId: string, targetId: string, value: string): CharacterLink | null {
+    this.ensureOpen()
+    const id = uuid()
+    try {
+      this.db!.prepare('INSERT INTO character_links (id, mode_id, source_id, target_id, value) VALUES (?, ?, ?, ?, ?)')
+        .run(id, modeId, sourceId, targetId, value)
+      return { id, modeId, sourceId, targetId, value }
+    } catch {
+      return null
+    }
+  }
+
+  updateLink(id: string, value: string): boolean {
+    this.ensureOpen()
+    const res = this.db!.prepare('UPDATE character_links SET value = ? WHERE id = ?').run(value, id)
+    return res.changes > 0
+  }
+
+  deleteLink(id: string): boolean {
+    this.ensureOpen()
+    const res = this.db!.prepare('DELETE FROM character_links WHERE id = ?').run(id)
+    return res.changes > 0
   }
 }
