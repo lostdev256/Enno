@@ -1,62 +1,49 @@
-import { app, BrowserWindow, Menu, ipcMain, dialog, protocol, net } from 'electron'
-import { createRequire } from 'node:module'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import {app, BrowserWindow, Menu, ipcMain, dialog, protocol, net} from 'electron'
+import {createRequire} from 'node:module'
+import {pathToFileURL} from 'node:url'
 import path from 'node:path'
 import Store from 'electron-store'
-import { EnnoDatabase } from './database'
+
+import {VITE_DEV_SERVER_URL, CORE_DIR, RENDERER_DIR} from './global'
+import {EnnoDatabase} from './database'
 
 const require = createRequire(import.meta.url)
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-app.commandLine.appendSwitch('remote-debugging-port', '9222');
 
-// The built directory structure
-//
-// ├─┬─┬ dist
-// │ │ └── index.html
-// │ │
-// │ ├─┬ dist-electron
-// │ │ ├── main.js
-// │ │ └── preload.mjs
-// │
-process.env.APP_ROOT = path.join(__dirname, '..')
+if (!app.isPackaged) {
+    app.commandLine.appendSwitch('remote-debugging-port', '9222');
+}
 
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
-export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
-export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
-export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
-
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
 let win: BrowserWindow | null
 
 // --------- Persistent Settings ---------
 const store = new Store({
-  defaults: {
-    lastOpenedFile: null as string | null,
-  },
+    defaults: {
+        lastOpenedFile: null as string | null,
+    },
 })
 
 // --------- Database ---------
 const db = new EnnoDatabase()
 
 function updateWindowTitle() {
-  if (!win) return
-  if (db.isOpen && db.projectName) {
-    win.setTitle(`Enno — ${db.projectName}`)
-  } else {
-    win.setTitle('Enno')
-  }
+    if (!win) return
+    if (db.isOpen && db.projectName) {
+        win.setTitle(`Enno — ${db.projectName}`)
+    } else {
+        win.setTitle('Enno')
+    }
 }
 
 function notifyProjectState() {
-  if (!win) return
-  win.webContents.send('project:state-changed', {
-    isOpen: db.isOpen,
-    filePath: db.filePath,
-    projectName: db.projectName,
-  })
-  updateWindowTitle()
+    if (!win) return
+    win.webContents.send('project:state-changed', {
+        isOpen: db.isOpen,
+        filePath: db.filePath,
+        projectName: db.projectName,
+    })
+    updateWindowTitle()
 }
 
 // --------- Window ---------
@@ -64,7 +51,7 @@ function createWindow() {
     win = new BrowserWindow({
         icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
         webPreferences: {
-            preload: path.join(__dirname, 'preload.mjs'),
+            preload: path.join(CORE_DIR, 'preload.mjs'),
         },
     })
 
@@ -88,7 +75,7 @@ function createWindow() {
     if (VITE_DEV_SERVER_URL) {
         win.loadURL(VITE_DEV_SERVER_URL)
     } else {
-        win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+        win.loadFile(path.join(RENDERER_DIR, 'index.html'))
     }
 }
 
@@ -127,7 +114,7 @@ function buildMenu() {
                     accelerator: 'CmdOrCtrl+O',
                     click: () => win?.webContents.send('menu:action', 'file:open'),
                 },
-                { type: 'separator' },
+                {type: 'separator'},
                 {
                     label: 'Save',
                     accelerator: 'CmdOrCtrl+S',
@@ -138,8 +125,8 @@ function buildMenu() {
                     accelerator: 'CmdOrCtrl+Shift+S',
                     click: () => win?.webContents.send('menu:action', 'file:save-as'),
                 },
-                { type: 'separator' },
-                { role: 'quit' },
+                {type: 'separator'},
+                {role: 'quit'},
             ],
         },
         {
@@ -199,17 +186,17 @@ ipcMain.handle('file:create', async () => {
     const result = await dialog.showSaveDialog({
         title: 'Create Enno Project',
         defaultPath: 'Untitled.ennodb',
-        filters: [{ name: 'Enno Database', extensions: ['ennodb'] }],
+        filters: [{name: 'Enno Database', extensions: ['ennodb']}],
     })
-    if (result.canceled || !result.filePath) return { success: false, cancelled: true }
+    if (result.canceled || !result.filePath) return {success: false, cancelled: true}
 
     try {
         db.create(result.filePath)
         store.set('lastOpenedFile', result.filePath)
         notifyProjectState()
-        return { success: true, filePath: result.filePath }
+        return {success: true, filePath: result.filePath}
     } catch (err: any) {
-        return { success: false, error: err.message }
+        return {success: false, error: err.message}
     }
 })
 
@@ -218,49 +205,49 @@ ipcMain.handle('file:open', async () => {
     const result = await dialog.showOpenDialog({
         title: 'Open Enno Project',
         properties: ['openFile'],
-        filters: [{ name: 'Enno Database', extensions: ['ennodb'] }],
+        filters: [{name: 'Enno Database', extensions: ['ennodb']}],
     })
-    if (result.canceled || result.filePaths.length === 0) return { success: false, cancelled: true }
+    if (result.canceled || result.filePaths.length === 0) return {success: false, cancelled: true}
 
     try {
         db.open(result.filePaths[0])
         store.set('lastOpenedFile', result.filePaths[0])
         notifyProjectState()
-        return { success: true, filePath: result.filePaths[0] }
+        return {success: true, filePath: result.filePaths[0]}
     } catch (err: any) {
-        return { success: false, error: err.message }
+        return {success: false, error: err.message}
     }
 })
 
 ipcMain.handle('file:save', async () => {
     console.log('[IPC] file:save')
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
     try {
         db.save()
-        return { success: true }
+        return {success: true}
     } catch (err: any) {
-        return { success: false, error: err.message }
+        return {success: false, error: err.message}
     }
 })
 
 ipcMain.handle('file:save-as', async () => {
     console.log('[IPC] file:save-as')
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
 
     const result = await dialog.showSaveDialog({
         title: 'Save Enno Project As',
         defaultPath: db.projectName || 'Untitled.ennodb',
-        filters: [{ name: 'Enno Database', extensions: ['ennodb'] }],
+        filters: [{name: 'Enno Database', extensions: ['ennodb']}],
     })
-    if (result.canceled || !result.filePath) return { success: false, cancelled: true }
+    if (result.canceled || !result.filePath) return {success: false, cancelled: true}
 
     try {
         db.saveAs(result.filePath)
         store.set('lastOpenedFile', result.filePath)
         notifyProjectState()
-        return { success: true, filePath: result.filePath }
+        return {success: true, filePath: result.filePath}
     } catch (err: any) {
-        return { success: false, error: err.message }
+        return {success: false, error: err.message}
     }
 })
 
@@ -268,112 +255,112 @@ ipcMain.handle('file:save-as', async () => {
 
 ipcMain.handle('help:about', async () => {
     console.log('[IPC] help:about')
-    return { name: 'Enno', version: '0.1.0' }
+    return {name: 'Enno', version: '0.1.0'}
 })
 
 // --------- Character IPC Handlers ---------
 
 ipcMain.handle('characters:list', async () => {
     console.log('[IPC] characters:list')
-    if (!db.isOpen) return { groups: [], ungrouped: [] }
+    if (!db.isOpen) return {groups: [], ungrouped: []}
     return db.getCharactersList()
 })
 
 ipcMain.handle('characters:get', async (_event, id: string) => {
     console.log(`[IPC] characters:get — ${id}`)
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
     const character = db.getCharacter(id)
-    if (!character) return { success: false, error: 'Character not found' }
-    return { success: true, character }
+    if (!character) return {success: false, error: 'Character not found'}
+    return {success: true, character}
 })
 
 ipcMain.handle('characters:create', async () => {
     console.log('[IPC] characters:create')
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
     const character = db.createCharacter()
-    return { success: true, character }
+    return {success: true, character}
 })
 
 ipcMain.handle('characters:update', async (_event, id: string, field: string, value: string) => {
     console.log(`[IPC] characters:update — ${id}.${field}`)
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
     const ok = db.updateCharacter(id, field, value)
-    return { success: ok }
+    return {success: ok}
 })
 
 ipcMain.handle('characters:delete', async (_event, id: string) => {
     console.log(`[IPC] characters:delete — ${id}`)
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
     const ok = db.deleteCharacter(id)
-    return { success: ok }
+    return {success: ok}
 })
 
 ipcMain.handle('characters:reorder', async (_event, order) => {
     console.log('[IPC] characters:reorder')
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
     db.reorderCharacters(order)
-    return { success: true }
+    return {success: true}
 })
 
 // --------- Group IPC Handlers ---------
 
 ipcMain.handle('characters:group:create', async (_event, name: string) => {
     console.log(`[IPC] characters:group:create — ${name}`)
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
     const group = db.createGroup(name)
-    return { success: true, group: { ...group, expanded: true, characters: [] } }
+    return {success: true, group: {...group, expanded: true, characters: []}}
 })
 
 ipcMain.handle('characters:group:delete', async (_event, groupId: string) => {
     console.log(`[IPC] characters:group:delete — ${groupId}`)
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
     const ok = db.deleteGroup(groupId)
-    return { success: ok }
+    return {success: ok}
 })
 
 ipcMain.handle('characters:group:rename', async (_event, groupId: string, newName: string) => {
     console.log(`[IPC] characters:group:rename — ${groupId} → ${newName}`)
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
     const ok = db.renameGroup(groupId, newName)
-    return { success: ok }
+    return {success: ok}
 })
 
 // --------- Avatar & Gallery IPC Handlers ---------
 
 ipcMain.handle('characters:avatar:upload', async (_event, characterId: string) => {
     console.log(`[IPC] characters:avatar:upload — ${characterId}`)
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
 
     const result = await dialog.showOpenDialog({
         properties: ['openFile'],
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'] }],
+        filters: [{name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg']}],
     })
-    if (result.canceled || result.filePaths.length === 0) return { success: false, cancelled: true }
+    if (result.canceled || result.filePaths.length === 0) return {success: false, cancelled: true}
 
     const avatarUrl = db.importAvatar(characterId, result.filePaths[0])
-    return { success: true, path: avatarUrl }
+    return {success: true, path: avatarUrl}
 })
 
 ipcMain.handle('characters:gallery:add', async (_event, characterId: string) => {
     console.log(`[IPC] characters:gallery:add — ${characterId}`)
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
 
     const result = await dialog.showOpenDialog({
         properties: ['openFile', 'multiSelections'],
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'] }],
+        filters: [{name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg']}],
     })
-    if (result.canceled || result.filePaths.length === 0) return { success: false, cancelled: true }
+    if (result.canceled || result.filePaths.length === 0) return {success: false, cancelled: true}
 
     const images = db.importGalleryImages(characterId, result.filePaths)
-    return { success: true, images }
+    return {success: true, images}
 })
 
 ipcMain.handle('characters:gallery:remove', async (_event, _characterId: string, imageId: string) => {
     console.log(`[IPC] characters:gallery:remove — ${imageId}`)
-    if (!db.isOpen) return { success: false, error: 'No project open' }
+    if (!db.isOpen) return {success: false, error: 'No project open'}
 
     const ok = db.removeGalleryImage(imageId)
-    return { success: ok }
+    return {success: ok}
 })
 
 // --------- Board & Links Handlers ---------
@@ -472,7 +459,7 @@ ipcMain.handle('locations:map:upload', async (_event, id: string) => {
     const result = await dialog.showOpenDialog({
         title: 'Select Map Image',
         properties: ['openFile'],
-        filters: [{ name: 'Images', extensions: ['jpg', 'png', 'gif', 'webp', 'jpeg'] }],
+        filters: [{name: 'Images', extensions: ['jpg', 'png', 'gif', 'webp', 'jpeg']}],
     })
     if (result.canceled || result.filePaths.length === 0) return false
     return db.updateLocation(id, 'map_image_path', result.filePaths[0])
@@ -487,7 +474,7 @@ ipcMain.handle('locations:map:update-coords', async (_event, id: string, x: numb
 // --------- Scenes IPC Handlers ---------
 
 ipcMain.handle('scenes:list', async () => {
-    if (!db.isOpen) return { groups: [], ungrouped: [] }
+    if (!db.isOpen) return {groups: [], ungrouped: []}
     return db.getScenesList()
 })
 
@@ -563,14 +550,14 @@ ipcMain.handle('scenes:actions:delete', async (_event, id: string) => {
 })
 
 ipcMain.handle('scenes:actions:gallery:add', async (_event, actionId: string) => {
-    if (!db.isOpen) return { success: false }
+    if (!db.isOpen) return {success: false}
     const result = await dialog.showOpenDialog({
         properties: ['openFile', 'multiSelections'],
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }],
+        filters: [{name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif']}],
     })
-    if (result.canceled || result.filePaths.length === 0) return { success: false }
+    if (result.canceled || result.filePaths.length === 0) return {success: false}
     const images = db.importSceneActionGallery(actionId, result.filePaths)
-    return { success: true, images }
+    return {success: true, images}
 })
 
 ipcMain.handle('scenes:actions:gallery:remove', async (_event, imageId: string) => {
@@ -591,7 +578,7 @@ ipcMain.handle('scenes:connections:delete', async (_event, id: string) => {
 // --------- Quests IPC Handlers ---------
 
 ipcMain.handle('quests:list', async () => {
-    if (!db.isOpen) return { groups: [], ungrouped: [] }
+    if (!db.isOpen) return {groups: [], ungrouped: []}
     return db.getQuestsList()
 })
 
@@ -637,25 +624,25 @@ ipcMain.handle('quests:group:rename', async (_event, id: string, name: string) =
 })
 
 ipcMain.handle('quests:icon:upload', async (_event, questId: string) => {
-    if (!db.isOpen) return { success: false }
+    if (!db.isOpen) return {success: false}
     const result = await dialog.showOpenDialog({
         properties: ['openFile'],
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'] }],
+        filters: [{name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg']}],
     })
-    if (result.canceled || result.filePaths.length === 0) return { success: false }
+    if (result.canceled || result.filePaths.length === 0) return {success: false}
     const iconUrl = db.importQuestIcon(questId, result.filePaths[0])
-    return { success: true, path: iconUrl }
+    return {success: true, path: iconUrl}
 })
 
 ipcMain.handle('quests:gallery:add', async (_event, questId: string) => {
-    if (!db.isOpen) return { success: false }
+    if (!db.isOpen) return {success: false}
     const result = await dialog.showOpenDialog({
         properties: ['openFile', 'multiSelections'],
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }],
+        filters: [{name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif']}],
     })
-    if (result.canceled || result.filePaths.length === 0) return { success: false }
+    if (result.canceled || result.filePaths.length === 0) return {success: false}
     const images = db.importQuestGallery(questId, result.filePaths)
-    return { success: true, images }
+    return {success: true, images}
 })
 
 ipcMain.handle('quests:gallery:remove', async (_event, imageId: string) => {
