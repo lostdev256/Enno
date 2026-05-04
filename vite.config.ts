@@ -13,6 +13,7 @@ export default defineConfig({
                 entry: 'electron/main.ts',
                 vite: {
                     build: {
+                        sourcemap: true,
                         rollupOptions: {
                             external: ['better-sqlite3'],
                         },

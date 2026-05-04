@@ -8,6 +8,8 @@ import { EnnoDatabase } from './database'
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+app.commandLine.appendSwitch('remote-debugging-port', '9222');
+
 // The built directory structure
 //
 // ├─┬─┬ dist
