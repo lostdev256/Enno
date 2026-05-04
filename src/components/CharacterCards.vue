@@ -3,6 +3,9 @@ import { ref, onMounted } from 'vue'
 import CharacterSidebar from './CharacterSidebar.vue'
 import CharacterDetail from './CharacterDetail.vue'
 import PromptDialog from './PromptDialog.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // --- Sidebar data types (light versions for sidebar) ---
 interface SidebarCharacter {
@@ -113,7 +116,7 @@ async function deleteCharacter(id: string) {
 
 // --- Create group ---
 async function createGroup() {
-  const name = await showPrompt('Create Group', 'Enter group name...')
+  const name = await showPrompt(t('characters.createGroup'), t('characters.enterGroupName'))
   if (!name) return
   await window.ennoAPI.createGroup(name)
   await loadList()
@@ -128,7 +131,7 @@ async function deleteGroup(id: string) {
 // --- Rename group ---
 async function renameGroup(id: string) {
   const group = groups.value.find(g => g.id === id)
-  const newName = await showPrompt('Rename Group', 'Enter new name...', group?.name || '')
+  const newName = await showPrompt(t('characters.renameGroup'), t('characters.enterNewName'), group?.name || '')
   if (!newName) return
   await window.ennoAPI.renameGroup(id, newName)
   await loadList()

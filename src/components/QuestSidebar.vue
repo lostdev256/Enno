@@ -3,6 +3,9 @@ import { ref } from 'vue'
 import draggable from 'vuedraggable'
 import ContextMenu from './ContextMenu.vue'
 import type { ContextMenuItem } from './ContextMenu.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface SidebarQuest {
   id: string
@@ -80,16 +83,16 @@ function onContextMenu(e: MouseEvent, type: 'quest' | 'group' | 'empty', id?: st
   ctxY.value = e.clientY
   ctxTargetId.value = id || null
   if (type === 'quest') {
-    ctxItems.value = [{ label: 'Delete Quest', action: 'delete-quest', icon: '🗑' }]
+    ctxItems.value = [{ label: t('quests.deleteQuest'), action: 'delete-quest', icon: '🗑' }]
   } else if (type === 'group') {
     ctxItems.value = [
-      { label: 'Rename Group', action: 'rename-group', icon: '✏️' },
-      { label: 'Delete Group', action: 'delete-group', icon: '🗑' },
+      { label: t('scenes.renameGroup'), action: 'rename-group', icon: '✏️' },
+      { label: t('scenes.deleteGroup'), action: 'delete-group', icon: '🗑' },
     ]
   } else {
     ctxItems.value = [
-      { label: 'Add Quest', action: 'add-quest', icon: '➕' },
-      { label: 'Add Group', action: 'add-group', icon: '📁' },
+      { label: t('menu.quests'), action: 'add-quest', icon: '➕' },
+      { label: t('scenes.addGroup'), action: 'add-group', icon: '📁' },
     ]
   }
   ctxVisible.value = true
@@ -116,18 +119,18 @@ function getIconSrc(url: string | null): string {
   <aside class="sidebar" @contextmenu="onContextMenu($event, 'empty')" @click="onDocClick">
     <div class="sidebar-toolbar">
       <div class="add-dropdown-wrap">
-        <button class="tb-btn" :class="{ active: showAddDropdown }" @click.stop="toggleAddDropdown" title="Add">
+        <button class="tb-btn" :class="{ active: showAddDropdown }" @click.stop="toggleAddDropdown" :title="t('shared.confirm')">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
         <Transition name="dropdown">
           <div v-if="showAddDropdown" class="add-dropdown">
-            <button class="add-dropdown-item" @click="addQuest"><span>📜</span> Add Quest</button>
-            <button class="add-dropdown-item" @click="addGroup"><span>📁</span> Add Group</button>
+            <button class="add-dropdown-item" @click="addQuest"><span>📜</span> {{ t('menu.quests') }}</button>
+            <button class="add-dropdown-item" @click="addGroup"><span>📁</span> {{ t('scenes.addGroup') }}</button>
           </div>
         </Transition>
       </div>
 
-      <button class="tb-btn" @click="selectedId && emit('delete-quest', selectedId)" :disabled="!selectedId" title="Delete selected">
+      <button class="tb-btn" @click="selectedId && emit('delete-quest', selectedId)" :disabled="!selectedId" :title="t('quests.deleteQuest')">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 3.5h9M5 3.5V2.5a1 1 0 011-1h2a1 1 0 011 1v1M3.5 3.5l.5 8a1 1 0 001 1h4a1 1 0 001-1l.5-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <div class="tb-spacer"></div>
@@ -164,7 +167,7 @@ function getIconSrc(url: string | null): string {
 
       <div v-if="ungrouped.length > 0" class="ungrouped-section">
         <div class="group-header ungrouped-header">
-          <span class="group-name" style="opacity: 0.5; font-style: italic;">Ungrouped</span>
+          <span class="group-name" style="opacity: 0.5; font-style: italic;">{{ t('menu.ungrouped') }}</span>
         </div>
         <draggable :list="ungrouped" group="quests" item-key="id" :animation="200" ghost-class="drag-ghost" chosen-class="drag-chosen" @end="onDragEnd">
           <template #item="{ element }">

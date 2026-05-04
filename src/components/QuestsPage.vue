@@ -3,6 +3,9 @@ import { ref, onMounted } from 'vue'
 import QuestSidebar from './QuestSidebar.vue'
 import QuestDetail from './QuestDetail.vue'
 import PromptDialog from './PromptDialog.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface SidebarQuest {
   id: string
@@ -97,7 +100,7 @@ async function deleteQuest(id: string) {
 }
 
 async function createGroup() {
-  const name = await showPrompt('Create Group', 'Enter group name...')
+  const name = await showPrompt(t('scenes.createGroup'), t('scenes.enterGroupName'))
   if (!name) return
   await window.ennoAPI.createQuestGroup(name)
   await loadList()
@@ -110,7 +113,7 @@ async function deleteGroup(id: string) {
 
 async function renameGroup(id: string) {
   const group = groups.value.find(g => g.id === id)
-  const newName = await showPrompt('Rename Group', 'Enter new name...', group?.name || '')
+  const newName = await showPrompt(t('scenes.renameGroup'), t('scenes.enterNewName'), group?.name || '')
   if (!newName) return
   await window.ennoAPI.renameQuestGroup(id, newName)
   await loadList()

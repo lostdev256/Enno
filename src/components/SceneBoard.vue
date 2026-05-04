@@ -3,6 +3,9 @@ import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import ContextMenu from './ContextMenu.vue'
 import type { ContextMenuItem } from './ContextMenu.vue'
 import defaultAvatar from '../assets/default-avatar.svg'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ scene: any }>()
 const emit = defineEmits<{
@@ -78,13 +81,13 @@ const actionColors: Record<string, string> = {
   dialog: '#a855f7',
 }
 
-const actionLabels: Record<string, string> = {
-  entry: 'Entry',
-  exit: 'Exit',
-  scene: 'Scene Event',
-  character: 'Character Action',
-  dialog: 'Dialog',
-}
+const actionLabels = computed(() => ({
+  entry: t('scenes.entry'),
+  exit: t('scenes.exit'),
+  scene: t('scenes.sceneEvent'),
+  character: t('scenes.characterAction'),
+  dialog: t('scenes.dialog'),
+}))
 
 // ── Dragging Blocks ──
 let draggedAction: any = null
@@ -173,9 +176,9 @@ async function stopDrawing(e: MouseEvent) {
     ctxCanvasPos = clientToCanvas(e.clientX, e.clientY)
     ctxX.value = e.clientX; ctxY.value = e.clientY; ctxConnectionId = null
     ctxItems.value = [
-      { label: 'Scene Event', action: 'add:scene', icon: '📝' },
-      { label: 'Character Action', action: 'add:character', icon: '🧑' },
-      { label: 'Dialog', action: 'add:dialog', icon: '💬' },
+      { label: t('scenes.sceneEvent'), action: 'add:scene', icon: '📝' },
+      { label: t('scenes.characterAction'), action: 'add:character', icon: '🧑' },
+      { label: t('scenes.dialog'), action: 'add:dialog', icon: '💬' },
     ]
     ctxVisible.value = true
   }
@@ -253,9 +256,9 @@ function onBoardContextMenu(e: MouseEvent) {
   ctxY.value = e.clientY
   ctxConnectionId = null
   ctxItems.value = [
-    { label: 'Scene Event', action: 'add:scene', icon: '📝' },
-    { label: 'Character Action', action: 'add:character', icon: '🧑' },
-    { label: 'Dialog', action: 'add:dialog', icon: '💬' },
+    { label: t('scenes.sceneEvent'), action: 'add:scene', icon: '📝' },
+    { label: t('scenes.characterAction'), action: 'add:character', icon: '🧑' },
+    { label: t('scenes.dialog'), action: 'add:dialog', icon: '💬' },
   ]
   ctxVisible.value = true
 }
@@ -266,7 +269,7 @@ function onConnectionContextMenu(e: MouseEvent, connId: string) {
   ctxX.value = e.clientX
   ctxY.value = e.clientY
   ctxConnectionId = connId
-  ctxItems.value = [{ label: 'Delete Connection', action: 'delete-connection', icon: '✕' }]
+  ctxItems.value = [{ label: t('storyline.deleteConnection'), action: 'delete-connection', icon: '✕' }]
   ctxVisible.value = true
 }
 
@@ -277,7 +280,7 @@ function onBlockContextMenu(e: MouseEvent, action: any) {
   ctxX.value = e.clientX
   ctxY.value = e.clientY
   ctxConnectionId = null
-  ctxItems.value = [{ label: 'Delete Action', action: `delete-action:${action.id}`, icon: '🗑' }]
+  ctxItems.value = [{ label: t('scenes.deleteScene'), action: `delete-action:${action.id}`, icon: '🗑' }]
   ctxVisible.value = true
 }
 
@@ -498,7 +501,7 @@ onMounted(() => nextTick(() => updateAllPinPositions()))
     <div class="scene-title-bar">
       <div v-if="!editingName" class="scene-title" @dblclick="startEditName">
         🎬 {{ scene.name }}
-        <button class="title-edit-btn" @click="startEditName">✏️</button>
+        <button class="title-edit-btn" @click="startEditName" :title="t('scenes.renameScene')">✏️</button>
       </div>
       <input v-else class="scene-name-input" v-model="nameInput" @blur="saveName" @keydown.enter="saveName" @keydown.escape="editingName = false" />
     </div>
@@ -506,16 +509,16 @@ onMounted(() => nextTick(() => updateAllPinPositions()))
     <!-- Characters panel (floating) -->
     <div v-if="showCharPanel" class="char-panel">
       <div class="char-panel-header">
-        <span>Characters</span>
-        <button class="char-panel-btn" @click="openCharPicker" title="Add character">＋</button>
+        <span>{{ t('scenes.characters') }}</span>
+        <button class="char-panel-btn" @click="openCharPicker" :title="t('scenes.addCharacter')">＋</button>
       </div>
       <div class="char-panel-list">
         <div v-for="ch in scene.characters" :key="ch.characterId" class="char-panel-item">
           <img :src="getAvatarSrc(ch.avatarUrl)" class="char-panel-avatar" />
           <span class="char-panel-name">{{ ch.name }}</span>
-          <button class="char-panel-remove" @click="removeCharFromScene(ch.characterId)" title="Remove">✕</button>
+          <button class="char-panel-remove" @click="removeCharFromScene(ch.characterId)" :title="t('shared.close')">✕</button>
         </div>
-        <div v-if="!scene.characters || scene.characters.length === 0" class="char-panel-empty">No characters</div>
+        <div v-if="!scene.characters || scene.characters.length === 0" class="char-panel-empty">{{ t('scenes.noCharacters') }}</div>
       </div>
     </div>
 
@@ -523,14 +526,14 @@ onMounted(() => nextTick(() => updateAllPinPositions()))
     <Teleport to="body">
       <div v-if="showCharPicker" class="picker-overlay" @click.self="showCharPicker = false">
         <div class="picker-dialog">
-          <h3>Select Character</h3>
+          <h3>{{ t('scenes.selectCharacter') }}</h3>
           <div class="picker-list">
             <div v-for="ch in allCharacters" :key="ch.id" class="picker-item" @click="addCharacterToScene(ch.id)">
               <img :src="getAvatarSrc(ch.avatarUrl)" class="picker-avatar" />
               <span>{{ ch.name }}</span>
             </div>
           </div>
-          <button class="picker-cancel" @click="showCharPicker = false">Cancel</button>
+          <button class="picker-cancel" @click="showCharPicker = false">{{ t('shared.cancel') }}</button>
         </div>
       </div>
     </Teleport>
@@ -558,9 +561,9 @@ onMounted(() => nextTick(() => updateAllPinPositions()))
       >
         <!-- Header (drag handle) -->
         <div class="block-header" :style="{ background: actionColors[action.actionType] || '#555' }" @mousedown="startBlockDrag($event, action)">
-          <span class="block-title">{{ actionLabels[action.actionType] || action.actionType }}</span>
+          <span class="block-title">{{ (actionLabels as any)[action.actionType] || action.actionType }}</span>
           <span v-if="action.actionType === 'character' || action.actionType === 'dialog'" class="block-char-name" @click.stop="openCharPickerForAction(action.id)" style="cursor:pointer;">
-            {{ getCharacter(parseData(action.data).characterId)?.name || '▸ select character' }}
+            {{ getCharacter(parseData(action.data).characterId)?.name || t('scenes.selectCharacterSmall') }}
           </span>
         </div>
 
@@ -582,12 +585,12 @@ onMounted(() => nextTick(() => updateAllPinPositions()))
             <!-- ENTRY -->
             <template v-if="action.actionType === 'entry'">
               <div v-if="editingActionId !== action.id" class="block-text editable" @dblclick.stop="startEdit(action, 'description')">
-                {{ parseData(action.data).description || 'Scene entry point' }}
+                {{ parseData(action.data).description || t('scenes.entryPoint') }}
               </div>
               <textarea v-else class="block-input" v-model="editText" @blur="saveEdit(action)" @keydown.escape="cancelEdit" @keydown.ctrl.enter="saveEdit(action)" rows="3" @click.stop></textarea>
               <!-- Quest link -->
               <div class="quest-link" @click.stop="openQuestPicker(action)">
-                🗺 {{ parseData(action.data).questId ? (parseData(action.data).questName || 'Quest selected') : 'Link quest…' }}
+                🗺 {{ parseData(action.data).questId ? (parseData(action.data).questName || t('scenes.questSelected')) : t('scenes.linkQuest') }}
               </div>
             </template>
 
@@ -595,17 +598,17 @@ onMounted(() => nextTick(() => updateAllPinPositions()))
             <template v-else-if="action.actionType === 'exit'">
               <div class="exit-pins-list">
                 <div v-for="pin in (parseData(action.data).pins || [])" :key="pin.id" class="exit-row">
-                  <input class="exit-pin-input" :value="pin.label" @change="updateExitPinLabel(action, pin.id, ($event.target as HTMLInputElement).value)" @click.stop placeholder="Exit label" />
-                  <button class="icon-btn red" @click.stop="removeExitPin(action, pin.id)" title="Remove">✕</button>
+                  <input class="exit-pin-input" :value="pin.label" @change="updateExitPinLabel(action, pin.id, ($event.target as HTMLInputElement).value)" @click.stop :placeholder="t('scenes.exitLabel')" />
+                  <button class="icon-btn red" @click.stop="removeExitPin(action, pin.id)" :title="t('shared.close')">✕</button>
                 </div>
-                <button class="add-choice-btn" @click.stop="addExitPin(action)">+ Add Exit</button>
+                <button class="add-choice-btn" @click.stop="addExitPin(action)">+ {{ t('scenes.addExit') }}</button>
               </div>
             </template>
 
             <!-- DIALOG -->
             <template v-else-if="action.actionType === 'dialog'">
               <div v-if="editingActionId !== action.id" class="block-text editable" @dblclick.stop="startEdit(action, 'text')">
-                {{ parseData(action.data).text || '(dblclick to edit dialog)' }}
+                {{ parseData(action.data).text || t('scenes.dblclickToEditDialog') }}
               </div>
               <textarea v-else class="block-input" v-model="editText" @blur="saveEdit(action)" @keydown.escape="cancelEdit" @keydown.ctrl.enter="saveEdit(action)" rows="3" @click.stop></textarea>
               <!-- Choices with inline output pins -->
@@ -613,16 +616,16 @@ onMounted(() => nextTick(() => updateAllPinPositions()))
                 <div v-for="ch in (parseData(action.data).choices || [])" :key="ch.id" class="choice-row-inline">
                   <input class="choice-input" :value="ch.label" @change="updateChoiceLabel(action, ch.id, ($event.target as HTMLInputElement).value)" @click.stop />
                   <button class="icon-btn red" @click.stop="removeChoice(action, ch.id)">✕</button>
-                  <div class="pin-dot output choice-pin" :data-pin-key="`${action.id}:${ch.id}:out`" @mousedown="startDrawing($event, action.id, ch.id)" title="Connect"></div>
+                  <div class="pin-dot output choice-pin" :data-pin-key="`${action.id}:${ch.id}:out`" @mousedown="startDrawing($event, action.id, ch.id)" :title="t('shared.confirm')"></div>
                 </div>
               </div>
-              <button class="add-choice-btn" @click.stop="addChoice(action)">+ Choice</button>
+              <button class="add-choice-btn" @click.stop="addChoice(action)">+ {{ t('scenes.addChoice') }}</button>
             </template>
 
             <!-- SCENE / CHARACTER -->
             <template v-else>
               <div v-if="editingActionId !== action.id" class="block-text editable" @dblclick.stop="startEdit(action, 'description')">
-                {{ parseData(action.data).description || '(dblclick to edit)' }}
+                {{ parseData(action.data).description || t('scenes.dblclickToEdit') }}
               </div>
               <textarea v-else class="block-input" v-model="editText" @blur="saveEdit(action)" @keydown.escape="cancelEdit" @keydown.ctrl.enter="saveEdit(action)" rows="3" @click.stop></textarea>
               <!-- Choices with inline output pins -->
@@ -630,10 +633,10 @@ onMounted(() => nextTick(() => updateAllPinPositions()))
                 <div v-for="ch in (parseData(action.data).choices || [])" :key="ch.id" class="choice-row-inline">
                   <input class="choice-input" :value="ch.label" @change="updateChoiceLabel(action, ch.id, ($event.target as HTMLInputElement).value)" @click.stop />
                   <button class="icon-btn red" @click.stop="removeChoice(action, ch.id)">✕</button>
-                  <div class="pin-dot output choice-pin" :data-pin-key="`${action.id}:${ch.id}:out`" @mousedown="startDrawing($event, action.id, ch.id)" title="Connect"></div>
+                  <div class="pin-dot output choice-pin" :data-pin-key="`${action.id}:${ch.id}:out`" @mousedown="startDrawing($event, action.id, ch.id)" :title="t('shared.confirm')"></div>
                 </div>
               </div>
-              <button class="add-choice-btn" @click.stop="addChoice(action)">+ Choice</button>
+              <button class="add-choice-btn" @click.stop="addChoice(action)">+ {{ t('scenes.addChoice') }}</button>
             </template>
 
           </div>
@@ -663,15 +666,15 @@ onMounted(() => nextTick(() => updateAllPinPositions()))
     <Teleport to="body">
       <div v-if="charPickerForAction" class="picker-overlay" @click.self="charPickerForAction = null">
         <div class="picker-dialog">
-          <h3>Select Character for Action</h3>
+          <h3>{{ t('scenes.selectCharacterForAction') }}</h3>
           <div class="picker-list">
             <div v-for="ch in scene.characters" :key="ch.characterId" class="picker-item" @click="selectCharForAction(ch.characterId)">
               <img :src="getAvatarSrc(ch.avatarUrl)" class="picker-avatar" />
               <span>{{ ch.name }}</span>
             </div>
-            <div v-if="!scene.characters?.length" class="char-panel-empty">Add characters to scene first</div>
+            <div v-if="!scene.characters?.length" class="char-panel-empty">{{ t('scenes.addCharactersToSceneFirst') }}</div>
           </div>
-          <button class="picker-cancel" @click="charPickerForAction = null">Cancel</button>
+          <button class="picker-cancel" @click="charPickerForAction = null">{{ t('shared.cancel') }}</button>
         </div>
       </div>
     </Teleport>
@@ -682,15 +685,15 @@ onMounted(() => nextTick(() => updateAllPinPositions()))
     <Teleport to="body">
       <div v-if="questPickerForAction" class="picker-overlay" @click.self="questPickerForAction = null">
         <div class="picker-dialog">
-          <h3>Link Quest to Entry</h3>
+          <h3>{{ t('scenes.linkQuestToEntry') }}</h3>
           <div class="picker-list">
             <div v-for="q in allQuests" :key="q.id" class="picker-item" @click="selectQuest(q)">
               <span style="font-size:18px">🗺</span>
               <span>{{ q.name }}</span>
             </div>
-            <div v-if="!allQuests.length" class="char-panel-empty">No quests found</div>
+            <div v-if="!allQuests.length" class="char-panel-empty">{{ t('scenes.noQuestsFound') }}</div>
           </div>
-          <button class="picker-cancel" @click="questPickerForAction = null">Cancel</button>
+          <button class="picker-cancel" @click="questPickerForAction = null">{{ t('shared.cancel') }}</button>
         </div>
       </div>
     </Teleport>

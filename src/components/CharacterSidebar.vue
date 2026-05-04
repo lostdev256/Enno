@@ -4,6 +4,9 @@ import draggable from 'vuedraggable'
 import ContextMenu from './ContextMenu.vue'
 import type { ContextMenuItem } from './ContextMenu.vue'
 import defaultAvatar from '../assets/default-avatar.svg'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // --- Types for sidebar display ---
 interface SidebarCharacter {
@@ -89,17 +92,17 @@ function onContextMenu(e: MouseEvent, type: 'character' | 'group' | 'empty', id?
 
   if (type === 'character') {
     ctxItems.value = [
-      { label: 'Delete Character', action: 'delete-character', icon: '🗑' },
+      { label: t('characters.deleteCharacter'), action: 'delete-character', icon: '🗑' },
     ]
   } else if (type === 'group') {
     ctxItems.value = [
-      { label: 'Rename Group', action: 'rename-group', icon: '✏️' },
-      { label: 'Delete Group', action: 'delete-group', icon: '🗑' },
+      { label: t('characters.renameGroup'), action: 'rename-group', icon: '✏️' },
+      { label: t('characters.deleteGroup'), action: 'delete-group', icon: '🗑' },
     ]
   } else {
     ctxItems.value = [
-      { label: 'Add Character', action: 'add-character', icon: '➕' },
-      { label: 'Add Group', action: 'add-group', icon: '📁' },
+      { label: t('characters.addCharacter'), action: 'add-character', icon: '➕' },
+      { label: t('characters.addGroup'), action: 'add-group', icon: '📁' },
     ]
   }
   ctxVisible.value = true
@@ -151,7 +154,7 @@ function onDragStartCard(e: DragEvent, id: string) {
           class="tb-btn"
           :class="{ active: showAddDropdown }"
           @click.stop="toggleAddDropdown"
-          title="Add"
+          :title="t('common.add')"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -160,10 +163,10 @@ function onDragStartCard(e: DragEvent, id: string) {
         <Transition name="dropdown">
           <div v-if="showAddDropdown" class="add-dropdown">
             <button class="add-dropdown-item" @click="addCharacter">
-              <span>👤</span> Add Character
+              <span>👤</span> {{ t('characters.addCharacter') }}
             </button>
             <button class="add-dropdown-item" @click="addGroup">
-              <span>📁</span> Add Group
+              <span>📁</span> {{ t('characters.addGroup') }}
             </button>
           </div>
         </Transition>
@@ -173,7 +176,7 @@ function onDragStartCard(e: DragEvent, id: string) {
         class="tb-btn"
         @click="selectedId && emit('delete-character', selectedId)"
         :disabled="!selectedId"
-        title="Delete selected"
+        :title="t('characters.deleteSelected')"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M2.5 3.5h9M5 3.5V2.5a1 1 0 011-1h2a1 1 0 011 1v1M3.5 3.5l.5 8a1 1 0 001 1h4a1 1 0 001-1l.5-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -182,13 +185,13 @@ function onDragStartCard(e: DragEvent, id: string) {
 
       <div class="tb-spacer"></div>
 
-      <button class="tb-btn" @click="emit('collapse-all')" title="Collapse all">
+      <button class="tb-btn" @click="emit('collapse-all')" :title="t('common.collapseAll')">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 7 7)"/>
         </svg>
       </button>
 
-      <button class="tb-btn" @click="emit('expand-all')" title="Expand all">
+      <button class="tb-btn" @click="emit('expand-all')" :title="t('common.expandAll')">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
@@ -250,7 +253,7 @@ function onDragStartCard(e: DragEvent, id: string) {
       <!-- Ungrouped -->
       <div v-if="ungrouped.length > 0" class="ungrouped-section">
         <div class="group-header ungrouped-header">
-          <span class="group-name" style="opacity: 0.5; font-style: italic;">Ungrouped</span>
+          <span class="group-name" style="opacity: 0.5; font-style: italic;">{{ t('common.ungrouped') }}</span>
         </div>
         <draggable
           :list="ungrouped"

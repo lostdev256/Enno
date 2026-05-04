@@ -5,6 +5,9 @@ import ImageLightbox from './ImageLightbox.vue'
 import type { ContextMenuItem } from './ContextMenu.vue'
 import defaultAvatar from '../assets/default-avatar.svg'
 import RichTextEditor from './RichTextEditor.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface CharacterFull {
   id: string
@@ -72,7 +75,8 @@ const galleryCtxVisible = ref(false)
 const galleryCtxX = ref(0)
 const galleryCtxY = ref(0)
 const galleryCtxImageId = ref<string | null>(null)
-const galleryCtxItems: ContextMenuItem[] = [{ label: 'Remove Image', action: 'remove', icon: '🗑' }]
+import { computed } from 'vue'
+const galleryCtxItems = computed<ContextMenuItem[]>(() => [{ label: t('characters.removeImage'), action: 'remove', icon: '🗑' }])
 
 function onGalleryContextMenu(e: MouseEvent, imageId: string) {
   e.preventDefault()
@@ -94,13 +98,13 @@ function onGalleryCtxAction(action: string) {
         <img :src="getAvatarSrc(character.avatarUrl)" class="avatar-img" alt="Avatar" />
         <div class="avatar-overlay">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 16V8m0 0l-3 3m3-3l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span>Upload</span>
+          <span>{{ t('characters.upload') }}</span>
         </div>
       </div>
       <div class="name-section">
         <div v-if="!editingName" class="name-display" @dblclick="startEditName">
           <h1 class="char-name">{{ character.name }}</h1>
-          <button class="edit-btn" @click="startEditName" title="Edit name">
+          <button class="edit-btn" @click="startEditName" :title="t('characters.editName')">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M10 2l2 2-7 7H3V9l7-7z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
@@ -115,17 +119,17 @@ function onGalleryCtxAction(action: string) {
       <RichTextEditor 
         :modelValue="character.description || ''"
         @update:modelValue="updateDescription"
-        title="Description"
-        placeholder="Write character description..."
-        emptyText="No description yet. Click edit to add one."
+        :title="t('common.description')"
+        :placeholder="t('characters.writeDescription')"
+        :emptyText="t('characters.noDescriptionYet')"
       />
     </div>
 
     <!-- Gallery -->
     <div class="detail-section">
       <div class="section-header">
-        <span class="section-title">Gallery</span>
-        <button class="edit-btn" @click="emit('add-gallery', character.id)" title="Add images">
+        <span class="section-title">{{ t('characters.gallery') }}</span>
+        <button class="edit-btn" @click="emit('add-gallery', character.id)" :title="t('characters.addImages')">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
       </div>
@@ -133,14 +137,14 @@ function onGalleryCtxAction(action: string) {
         <div v-for="(img, i) in character.gallery" :key="img.id" class="gallery-thumb" @click="openLightbox(i)" @contextmenu="onGalleryContextMenu($event, img.id)">
           <img :src="'enno://' + img.path" :alt="`Gallery ${i + 1}`" />
         </div>
-        <button class="gallery-add-btn" @click="emit('add-gallery', character.id)" title="Add more">
+        <button class="gallery-add-btn" @click="emit('add-gallery', character.id)" :title="t('characters.addMore')">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
       </div>
       <div v-else class="gallery-empty">
         <button class="gallery-empty-btn" @click="emit('add-gallery', character.id)">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M6 18l4-5 3 3 2-2 3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span>Add images to gallery</span>
+          <span>{{ t('characters.addImagesToGallery') }}</span>
         </button>
       </div>
     </div>
@@ -154,7 +158,7 @@ function onGalleryCtxAction(action: string) {
     <div class="empty-icon">
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="6" width="32" height="36" rx="4" stroke="currentColor" stroke-width="2"/><circle cx="24" cy="20" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M14 38c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="currentColor" stroke-width="1.5"/></svg>
     </div>
-    <p class="empty-text">Select a character to view details</p>
+    <p class="empty-text">{{ t('characters.selectCharacterToView') }}</p>
   </div>
 </template>
 

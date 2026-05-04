@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import defaultAvatar from '../assets/default-avatar.svg'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface BoardNode { characterId: string; x: number; y: number }
 interface LinkMode { id: string; name: string; maxLinksPerPair: number; dataType: 'text' | 'enum'; settings: string }
@@ -426,11 +429,11 @@ const drawingLinePath = computed(() => {
         @contextmenu.stop="emit('context-menu', $event, 'node', node.characterId)"
       >
         <img :src="getAvatarSrc(getChar(node.characterId)?.avatarUrl)" class="node-avatar" draggable="false" />
-        <span class="node-name">{{ getChar(node.characterId)?.name || 'Unknown' }}</span>
+        <span class="node-name">{{ getChar(node.characterId)?.name || t('links.unknown') }}</span>
         
         <div 
           class="node-connector" 
-          title="Drag to create link"
+          :title="t('links.dragToCreateLink')"
           @mousedown.stop="startDrawing($event, node)"
         ></div>
       </div>

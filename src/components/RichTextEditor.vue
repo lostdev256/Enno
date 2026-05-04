@@ -7,6 +7,9 @@ import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
 import Highlight from '@tiptap/extension-highlight'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: string
@@ -109,26 +112,26 @@ function addLink() {
     <!-- Edit mode: Tiptap toolbar + editor -->
     <template v-else>
       <div class="editor-toolbar" v-if="editor">
-        <button class="tb" :class="{ on: isActive('bold') }" @click="editor!.chain().focus().toggleBold().run()" title="Bold"><b>B</b></button>
-        <button class="tb" :class="{ on: isActive('italic') }" @click="editor!.chain().focus().toggleItalic().run()" title="Italic"><i>I</i></button>
-        <button class="tb" :class="{ on: isActive('underline') }" @click="editor!.chain().focus().toggleUnderline().run()" title="Underline"><u>U</u></button>
-        <button class="tb" :class="{ on: isActive('strike') }" @click="editor!.chain().focus().toggleStrike().run()" title="Strikethrough"><s>S</s></button>
-        <button class="tb" :class="{ on: isActive('highlight') }" @click="editor!.chain().focus().toggleHighlight().run()" title="Highlight">H</button>
+        <button class="tb" :class="{ on: isActive('bold') }" @click="editor!.chain().focus().toggleBold().run()" :title="t('shared.bold')"><b>B</b></button>
+        <button class="tb" :class="{ on: isActive('italic') }" @click="editor!.chain().focus().toggleItalic().run()" :title="t('shared.italic')"><i>I</i></button>
+        <button class="tb" :class="{ on: isActive('underline') }" @click="editor!.chain().focus().toggleUnderline().run()" :title="t('shared.underline')"><u>U</u></button>
+        <button class="tb" :class="{ on: isActive('strike') }" @click="editor!.chain().focus().toggleStrike().run()" :title="t('shared.strikethrough')"><s>S</s></button>
+        <button class="tb" :class="{ on: isActive('highlight') }" @click="editor!.chain().focus().toggleHighlight().run()" :title="t('shared.highlight')">H</button>
         <div class="tb-sep"></div>
-        <button class="tb" :class="{ on: isActive('heading', { level: 1 }) }" @click="editor!.chain().focus().toggleHeading({ level: 1 }).run()" title="Heading 1">H1</button>
-        <button class="tb" :class="{ on: isActive('heading', { level: 2 }) }" @click="editor!.chain().focus().toggleHeading({ level: 2 }).run()" title="Heading 2">H2</button>
-        <button class="tb" :class="{ on: isActive('heading', { level: 3 }) }" @click="editor!.chain().focus().toggleHeading({ level: 3 }).run()" title="Heading 3">H3</button>
+        <button class="tb" :class="{ on: isActive('heading', { level: 1 }) }" @click="editor!.chain().focus().toggleHeading({ level: 1 }).run()" :title="t('shared.h1')">H1</button>
+        <button class="tb" :class="{ on: isActive('heading', { level: 2 }) }" @click="editor!.chain().focus().toggleHeading({ level: 2 }).run()" :title="t('shared.h2')">H2</button>
+        <button class="tb" :class="{ on: isActive('heading', { level: 3 }) }" @click="editor!.chain().focus().toggleHeading({ level: 3 }).run()" :title="t('shared.h3')">H3</button>
         <div class="tb-sep"></div>
-        <button class="tb" :class="{ on: isActive('bulletList') }" @click="editor!.chain().focus().toggleBulletList().run()" title="Bullet list">•≡</button>
-        <button class="tb" :class="{ on: isActive('orderedList') }" @click="editor!.chain().focus().toggleOrderedList().run()" title="Ordered list">1.</button>
+        <button class="tb" :class="{ on: isActive('bulletList') }" @click="editor!.chain().focus().toggleBulletList().run()" :title="t('shared.bulletList')">•≡</button>
+        <button class="tb" :class="{ on: isActive('orderedList') }" @click="editor!.chain().focus().toggleOrderedList().run()" :title="t('shared.orderedList')">1.</button>
         <button class="tb" :class="{ on: isActive('blockquote') }" @click="editor!.chain().focus().toggleBlockquote().run()" title="Quote">❝</button>
         <button class="tb" :class="{ on: isActive('codeBlock') }" @click="editor!.chain().focus().toggleCodeBlock().run()" title="Code block">&lt;/&gt;</button>
         <div class="tb-sep"></div>
         <button class="tb" :class="{ on: isActive('link') }" @click="addLink" title="Link">🔗</button>
         <div class="tb-sep"></div>
-        <button class="tb" @click="editor!.chain().focus().setTextAlign('left').run()" :class="{ on: isActive({ textAlign: 'left' }) }" title="Align left">⫷</button>
-        <button class="tb" @click="editor!.chain().focus().setTextAlign('center').run()" :class="{ on: isActive({ textAlign: 'center' }) }" title="Align center">☰</button>
-        <button class="tb" @click="editor!.chain().focus().setTextAlign('right').run()" :class="{ on: isActive({ textAlign: 'right' }) }" title="Align right">⫸</button>
+        <button class="tb" @click="editor!.chain().focus().setTextAlign('left').run()" :class="{ on: isActive({ textAlign: 'left' }) }" :title="t('shared.alignLeft')">⫷</button>
+        <button class="tb" @click="editor!.chain().focus().setTextAlign('center').run()" :class="{ on: isActive({ textAlign: 'center' }) }" :title="t('shared.alignCenter')">☰</button>
+        <button class="tb" @click="editor!.chain().focus().setTextAlign('right').run()" :class="{ on: isActive({ textAlign: 'right' }) }" :title="t('shared.alignRight')">⫸</button>
         <div class="tb-spacer"></div>
         <button class="tb" @click="editor!.chain().focus().undo().run()" :disabled="!editor!.can().undo()" title="Undo">↩</button>
         <button class="tb" @click="editor!.chain().focus().redo().run()" :disabled="!editor!.can().redo()" title="Redo">↪</button>

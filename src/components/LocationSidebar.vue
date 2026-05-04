@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, watch } from 'vue'
 import LocationSidebarTree from './LocationSidebarTree.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface LocationTreeItem {
   id: string
@@ -38,8 +41,8 @@ function onTreeUpdate(newTree: LocationTreeItem[]) {
 <template>
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h2>Locations</h2>
-      <button class="add-root-btn" @click="$emit('create-root')" title="Add Root Location">
+      <h2>{{ t('menu.locations') }}</h2>
+      <button class="add-root-btn" @click="$emit('create-root')" :title="t('locations.addRootLocation')">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>
     </div>
@@ -55,8 +58,8 @@ function onTreeUpdate(newTree: LocationTreeItem[]) {
       />
       
       <div v-if="localTree.length === 0" class="empty-state">
-        <p>No locations yet.</p>
-        <button class="add-root-btn-large" @click="$emit('create-root')">Create First Location</button>
+        <p>{{ t('locations.selectLocationToViewMap') }}</p>
+        <button class="add-root-btn-large" @click="$emit('create-root')">{{ t('locations.addRootLocation') }}</button>
       </div>
     </div>
   </aside>

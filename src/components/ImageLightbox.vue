@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   images: string[]
@@ -60,7 +63,7 @@ onUnmounted(() => {
         @click="onOverlayClick"
       >
         <div class="lightbox-container">
-          <button class="lb-close" @click="emit('close')" title="Close">×</button>
+          <button class="lb-close" @click="emit('close')" :title="t('shared.close')">×</button>
 
           <button
             v-if="currentIndex > 0"
@@ -85,7 +88,7 @@ onUnmounted(() => {
           >›</button>
 
           <div class="lb-counter">
-            {{ currentIndex + 1 }} / {{ images.length }}
+            {{ t('shared.imageOf', { current: currentIndex + 1, total: images.length }) }}
           </div>
         </div>
       </div>

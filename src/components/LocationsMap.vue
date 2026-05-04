@@ -2,6 +2,9 @@
 import { ref, onMounted } from 'vue'
 import LocationSidebar from './LocationSidebar.vue'
 import LocationDetail from './LocationDetail.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 // TODO: import LocationDetail
 
 interface LocationTreeItem {
@@ -32,7 +35,7 @@ async function createRootLocation() {
     await loadTree()
     await selectLocation(id)
   } catch (err: any) {
-    alert("Error creating root location: " + err.message)
+    alert(t('locations.errorCreateRoot') + err.message)
   }
 }
 
@@ -43,12 +46,12 @@ async function createChildLocation(parentId: string) {
     await loadTree()
     await selectLocation(id)
   } catch (err: any) {
-    alert("Error creating child location: " + err.message)
+    alert(t('locations.errorCreateChild') + err.message)
   }
 }
 
 async function deleteLocation(id: string) {
-  if (confirm('Are you sure you want to delete this location? All child locations will also be deleted.')) {
+  if (confirm(t('locations.deleteConfirm'))) {
     await window.ennoAPI.deleteLocation(id)
     if (selectedId.value === id) {
       selectedId.value = null
@@ -129,7 +132,7 @@ onMounted(() => {
       <div class="empty-icon">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M24 6c-8 0-14 6-14 14 0 10 14 22 14 22s14-12 14-22c0-8-6-14-14-14zm0 20a6 6 0 110-12 6 6 0 010 12z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <p class="empty-text">Select a location to view its map</p>
+      <p class="empty-text">{{ t('locations.selectLocationToViewMap') }}</p>
     </div>
   </div>
 </template>

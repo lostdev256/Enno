@@ -5,6 +5,9 @@ import LinksBoard from './LinksBoard.vue'
 import LinkModesManager from './LinkModesManager.vue'
 import ContextMenu, { ContextMenuItem } from './ContextMenu.vue'
 import PromptDialog from './PromptDialog.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const groups = ref([])
 const ungrouped = ref([])
@@ -122,12 +125,12 @@ function onBoardContextMenu(evt: MouseEvent, type: 'node' | 'link', id: string) 
   if (type === 'node') {
     pendingNodeId = id
     ctxItems.value = [
-      { label: 'Remove from Board', action: 'remove-node', icon: '✕' }
+      { label: t('links.removeFromBoard'), action: 'remove-node', icon: '✕' }
     ]
   } else if (type === 'link') {
     pendingLinkId = id
     ctxItems.value = [
-      { label: 'Delete Link', action: 'delete-link', icon: '✕' }
+      { label: t('links.deleteLink'), action: 'delete-link', icon: '✕' }
     ]
   }
   ctxVisible.value = true
@@ -199,13 +202,13 @@ function onPromptCancel() {
     <div class="board-area">
       <header class="board-header">
         <div class="mode-selector">
-          <label>Link Mode:</label>
+          <label>{{ t('links.linkMode') }}</label>
           <select v-model="currentModeId" class="mode-select">
             <option v-for="mode in linkModes" :key="mode.id" :value="mode.id">
               {{ mode.name }}
             </option>
           </select>
-          <button class="icon-btn" @click="showModesManager = true" title="Manage Modes">⚙️</button>
+          <button class="icon-btn" @click="showModesManager = true" :title="t('links.manageModesTitle')">⚙️</button>
         </div>
       </header>
 
@@ -242,7 +245,7 @@ function onPromptCancel() {
 
     <PromptDialog
       :visible="promptVisible"
-      title="Enter connection description"
+      :title="t('links.enterConnectionDesc')"
       @confirm="onPromptConfirm"
       @cancel="onPromptCancel"
     />

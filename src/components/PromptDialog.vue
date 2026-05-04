@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   visible: boolean
@@ -57,8 +60,8 @@ function onKeyDown(e: KeyboardEvent) {
             @keydown.escape="cancel"
           />
           <div class="prompt-actions">
-            <button class="prompt-btn prompt-cancel" @click="cancel">Cancel</button>
-            <button class="prompt-btn prompt-confirm" @click="confirm" :disabled="!inputValue.trim()">OK</button>
+            <button class="prompt-btn prompt-cancel" @click="cancel">{{ t('shared.cancel') }}</button>
+            <button class="prompt-btn prompt-confirm" @click="confirm" :disabled="!inputValue.trim()">{{ t('shared.confirm') }}</button>
           </div>
         </div>
       </div>

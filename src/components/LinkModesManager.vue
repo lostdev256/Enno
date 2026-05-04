@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 interface LinkMode {
   id: string
@@ -33,6 +34,7 @@ const emit = defineEmits<{
 
 const modes = ref<LinkMode[]>([])
 const selectedIndex = ref<number>(-1)
+const { t } = useI18n()
 
 // Form state
 const formName = ref('')
@@ -78,7 +80,7 @@ function selectMode(index: number) {
 function addEnumValue() {
   formEnumValues.value.push({
     id: `val_${Date.now()}`,
-    label: 'New Value',
+    label: t('links.newValue'),
     color: '#888888'
   })
 }
@@ -114,7 +116,7 @@ async function saveMode() {
 
 async function createMode() {
   const settings: ModeSettings = { lineType: 'line', lineColor: '#a5b4fc' }
-  await window.ennoAPI.createLinkMode('New Mode', 1, 'text', JSON.stringify(settings))
+  await window.ennoAPI.createLinkMode(t('links.newMode'), 1, 'text', JSON.stringify(settings))
   await loadModes()
   selectMode(modes.value.length - 1)
   emit('changed')
@@ -123,7 +125,7 @@ async function createMode() {
 async function deleteMode() {
   const mode = modes.value[selectedIndex.value]
   if (!mode) return
-  if (confirm(`Delete mode "${mode.name}"? This will delete all links using this mode.`)) {
+  if (confirm(t('links.deleteModeConfirm'))) {
     await window.ennoAPI.deleteLinkMode(mode.id)
     selectedIndex.value = Math.max(0, selectedIndex.value - 1)
     await loadModes()
@@ -159,7 +161,7 @@ function moveDown() {
   <div v-if="visible" class="modal-overlay" @click="emit('close')">
     <div class="modal-container" @click.stop>
       <header class="modal-header">
-        <h2>Manage Link Modes</h2>
+        <h2>{{ t('links.manageModes') }}</h2>
         <button class="close-btn" @click="emit('close')">✕</button>
       </header>
 
@@ -178,7 +180,7 @@ function moveDown() {
             </div>
           </div>
           <div class="sidebar-actions">
-            <button class="action-btn" @click="createMode">+ New Mode</button>
+            <button class="action-btn" @click="createMode">+ {{ t('links.newMode') }}</button>
             <div class="sort-actions" v-if="modes.length > 0">
               <button class="icon-btn" @click="moveUp" :disabled="selectedIndex <= 0">↑</button>
               <button class="icon-btn" @click="moveDown" :disabled="selectedIndex >= modes.length - 1">↓</button>
@@ -189,36 +191,36 @@ function moveDown() {
         <!-- Editor -->
         <div class="mode-editor" v-if="modes.length > 0 && selectedIndex >= 0">
           <div class="form-group">
-            <label>Mode Name</label>
+            <label>{{ t('links.modeName') }}</label>
             <input type="text" v-model="formName" class="form-input" />
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label>Data Type</label>
+              <label>{{ t('links.dataType') }}</label>
               <select v-model="formDataType" class="form-select">
-                <option value="text">Text (Custom per link)</option>
-                <option value="enum">Enum (Predefined options)</option>
+                <option value="text">{{ t('links.typeText') }}</option>
+                <option value="enum">{{ t('links.typeEnum') }}</option>
               </select>
             </div>
             <div class="form-group">
-              <label title="0 means unlimited">Max Links per Pair</label>
+              <label title="0 means unlimited">{{ t('links.maxLinks') }}</label>
               <input type="number" v-model="formMaxLinks" class="form-input" min="0" />
             </div>
           </div>
 
           <div class="form-group">
-            <label>Line Type</label>
+            <label>{{ t('links.lineType') }}</label>
             <select v-model="formLineType" class="form-select">
-              <option value="line">Simple Line</option>
-              <option value="arrow">Arrow (Directed)</option>
-              <option value="double_arrow">Double Arrow (Bidirectional)</option>
+              <option value="line">{{ t('links.lineSimple') }}</option>
+              <option value="arrow">{{ t('links.lineArrow') }}</option>
+              <option value="double_arrow">{{ t('links.lineDoubleArrow') }}</option>
             </select>
           </div>
 
           <!-- Text settings -->
           <div class="settings-group" v-if="formDataType === 'text'">
-            <label>Line Color</label>
+            <label>{{ t('links.lineColor') }}</label>
             <div class="color-picker-row">
               <input type="color" v-model="formLineColor" class="color-input" />
               <input type="text" v-model="formLineColor" class="form-input color-text" />
@@ -227,25 +229,25 @@ function moveDown() {
 
           <!-- Enum settings -->
           <div class="settings-group" v-if="formDataType === 'enum'">
-            <label>Enum Values</label>
+            <label>{{ t('links.enumValues') }}</label>
             <div class="enum-list">
               <div v-for="(val, i) in formEnumValues" :key="val.id" class="enum-item">
                 <input type="color" v-model="val.color" class="color-input" />
-                <input type="text" v-model="val.label" class="form-input" placeholder="Label" />
+                <input type="text" v-model="val.label" class="form-input" :placeholder="t('links.label')" />
                 <button class="icon-btn danger" @click="removeEnumValue(i)">✕</button>
               </div>
             </div>
-            <button class="action-btn sm" @click="addEnumValue">+ Add Value</button>
+            <button class="action-btn sm" @click="addEnumValue">+ {{ t('links.addValue') }}</button>
           </div>
 
           <div class="editor-actions">
-            <button class="action-btn danger" @click="deleteMode">Delete Mode</button>
+            <button class="action-btn danger" @click="deleteMode">{{ t('links.deleteMode') }}</button>
             <div class="spacer"></div>
-            <button class="action-btn primary" @click="saveMode">Save Changes</button>
+            <button class="action-btn primary" @click="saveMode">{{ t('links.saveChanges') }}</button>
           </div>
         </div>
         <div class="mode-editor empty" v-else>
-          <p>Create a mode to edit its settings.</p>
+          <p>{{ t('links.createModeToEdit') }}</p>
         </div>
       </div>
     </div>

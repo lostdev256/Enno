@@ -4,6 +4,9 @@ import SceneSidebar from './SceneSidebar.vue'
 import PromptDialog from './PromptDialog.vue'
 import ContextMenu from './ContextMenu.vue'
 import type { ContextMenuItem } from './ContextMenu.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface SidebarScene { id: string; name: string }
 interface SidebarGroup { id: string; name: string; expanded: boolean; scenes: SidebarScene[] }
@@ -41,11 +44,11 @@ async function loadList() {
 }
 async function createScene() { const r = await window.ennoAPI.createScene(); if (r) await loadList() }
 async function deleteScene(id: string) { await window.ennoAPI.deleteScene(id); await loadList() }
-async function createGroup() { const name = await showPrompt('Create Group', 'Enter group name...'); if (!name) return; await window.ennoAPI.createSceneGroup(name); await loadList() }
+async function createGroup() { const name = await showPrompt(t('scenes.createGroup'), t('scenes.enterGroupName')); if (!name) return; await window.ennoAPI.createSceneGroup(name); await loadList() }
 async function deleteGroup(id: string) { await window.ennoAPI.deleteSceneGroup(id); await loadList() }
 async function renameGroup(id: string) {
   const g = groups.value.find(gr => gr.id === id)
-  const n = await showPrompt('Rename Group', 'Enter new name...', g?.name || '')
+  const n = await showPrompt(t('scenes.renameGroup'), t('scenes.enterNewName'), g?.name || '')
   if (!n) return; await window.ennoAPI.renameSceneGroup(id, n); await loadList()
 }
 async function handleReorder(data: { groups: SidebarGroup[], ungrouped: SidebarScene[] }) {
@@ -293,21 +296,21 @@ function onBoardContextMenu(e: MouseEvent) {
   if ((e.target as HTMLElement).closest('.storyline-node')) return
   ctxCanvasPos = clientToCanvas(e.clientX, e.clientY)
   ctxX.value = e.clientX; ctxY.value = e.clientY; ctxNodeId = null; ctxConnId = null
-  ctxItems.value = [{ label: 'Global Action', action: 'add:global_action', icon: '📝' }]
+  ctxItems.value = [{ label: t('storyline.globalAction'), action: 'add:global_action', icon: '📝' }]
   ctxVisible.value = true
 }
 
 function onNodeContextMenu(e: MouseEvent, nodeId: string) {
   e.preventDefault(); e.stopPropagation()
   ctxX.value = e.clientX; ctxY.value = e.clientY; ctxNodeId = nodeId; ctxConnId = null
-  ctxItems.value = [{ label: 'Delete Node', action: 'delete-node', icon: '🗑' }]
+  ctxItems.value = [{ label: t('storyline.deleteNode'), action: 'delete-node', icon: '🗑' }]
   ctxVisible.value = true
 }
 
 function onConnContextMenu(e: MouseEvent, connId: string) {
   e.preventDefault(); e.stopPropagation()
   ctxX.value = e.clientX; ctxY.value = e.clientY; ctxConnId = connId; ctxNodeId = null
-  ctxItems.value = [{ label: 'Delete Connection', action: 'delete-conn', icon: '✕' }]
+  ctxItems.value = [{ label: t('storyline.deleteConnection'), action: 'delete-conn', icon: '✕' }]
   ctxVisible.value = true
 }
 
@@ -323,9 +326,9 @@ async function onCtxAction(action: string) {
 }
 
 function getSceneName(refId: string | null): string {
-  if (!refId) return 'Global Action'
+  if (!refId) return t('storyline.globalAction')
   for (const g of groups.value) { const s = g.scenes.find(sc => sc.id === refId); if (s) return s.name }
-  return ungrouped.value.find(s => s.id === refId)?.name || 'Unknown'
+  return ungrouped.value.find(s => s.id === refId)?.name || t('menu.unknown')
 }
 
 function getNodeExitPins(node: any): { id: string; label: string }[] {
@@ -482,7 +485,7 @@ onMounted(async () => {
               <template v-if="node.nodeType === 'global_action'">
                 <div class="global-content">
                   <div v-if="editingNodeId !== node.id" class="block-text editable" @dblclick.stop="startEditNode(node)">
-                    {{ (function(){ try{ return JSON.parse(node.data).description || '(dblclick to edit)' } catch{ return '' } })() }}
+                    {{ (function(){ try{ return JSON.parse(node.data).description || t('scenes.dblclickToEdit') } catch{ return '' } })() }}
                   </div>
                   <textarea v-else class="block-input" v-model="editDesc" @blur="saveEditNode(node)" @keydown.escape="cancelEditNode" @keydown.ctrl.enter="saveEditNode(node)" rows="2" @click.stop></textarea>
                   
@@ -492,7 +495,7 @@ onMounted(async () => {
                       <button class="icon-btn red" @click.stop="removeGlobalChoice(node, ch.id)">✕</button>
                     </div>
                   </div>
-                  <button class="add-choice-btn" @click.stop="addGlobalChoice(node)">+ Choice</button>
+                  <button class="add-choice-btn" @click.stop="addGlobalChoice(node)">+ {{ t('scenes.addChoice') }}</button>
                 </div>
               </template>
             </div>
@@ -523,7 +526,7 @@ onMounted(async () => {
             <template v-if="node.nodeType === 'global_action'">
               <div class="global-content">
                 <div v-if="editingNodeId !== node.id" class="block-text editable" @dblclick.stop="startEditNode(node)">
-                  {{ (function(){ try{ return JSON.parse(node.data).description || '(dblclick to edit)' } catch{ return '' } })() }}
+                  {{ (function(){ try{ return JSON.parse(node.data).description || t('scenes.dblclickToEdit') } catch{ return '' } })() }}
                 </div>
                 <textarea v-else class="block-input" v-model="editDesc" @blur="saveEditNode(node)" @keydown.escape="cancelEditNode" @keydown.ctrl.enter="saveEditNode(node)" rows="2" @click.stop></textarea>
                 
@@ -533,7 +536,7 @@ onMounted(async () => {
                     <button class="icon-btn red" @click.stop="removeGlobalChoice(node, ch.id)">✕</button>
                   </div>
                 </div>
-                <button class="add-choice-btn" @click.stop="addGlobalChoice(node)">+ Choice</button>
+                <button class="add-choice-btn" @click.stop="addGlobalChoice(node)">+ {{ t('scenes.addChoice') }}</button>
               </div>
             </template>
           </div>

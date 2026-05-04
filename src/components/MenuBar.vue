@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 // --- Menu data structure ---
 interface MenuItem {
@@ -14,54 +15,59 @@ interface MenuGroup {
   items: MenuItem[]
 }
 
-const menus: MenuGroup[] = [
-  {
-    label: 'File',
-    items: [
-      { label: 'Create', action: 'file:create', shortcut: '⌘N' },
-      { label: 'Open', action: 'file:open', shortcut: '⌘O' },
-      { separator: true, label: '' },
-      { label: 'Save', action: 'file:save', shortcut: '⌘S' },
-      { label: 'Save As', action: 'file:save-as', shortcut: '⇧⌘S' },
-    ],
-  },
-  {
-    label: 'Characters',
-    items: [
-      { label: 'Cards', action: 'characters:cards' },
-      { label: 'Links', action: 'characters:links' },
-    ],
-  },
-  {
-    label: 'Locations',
-    items: [
-      { label: 'Map', action: 'locations:map' },
-    ],
-  },
-  {
-    label: 'Scenes',
-    items: [
-      { label: 'Editor', action: 'scenes:editor' },
-      { label: 'Storyline', action: 'scenes:storyline' },
-    ],
-  },
-  {
-    label: 'Quests',
-    items: [
-      { label: 'Cards', action: 'quests:cards' },
-    ],
-  },
-  {
-    label: 'Help',
-    items: [
-      { label: 'About', action: 'help:about' },
-    ],
-  },
-]
-
 const emit = defineEmits<{
   (e: 'navigate', page: string): void
+  (e: 'open-settings'): void
 }>()
+
+const { t } = useI18n()
+
+const menus = computed<MenuGroup[]>(() => [
+  {
+    label: t('menu.file'),
+    items: [
+      { label: t('menu.fileCreate'), action: 'file:create', shortcut: '⌘N' },
+      { label: t('menu.fileOpen'), action: 'file:open', shortcut: '⌘O' },
+      { separator: true, label: '' },
+      { label: t('menu.fileSave'), action: 'file:save', shortcut: '⌘S' },
+      { label: t('menu.fileSaveAs'), action: 'file:save-as', shortcut: '⇧⌘S' },
+      { separator: true, label: '' },
+      { label: t('menu.settings'), action: 'app:settings', shortcut: '⌘,' },
+    ],
+  },
+  {
+    label: t('menu.characters'),
+    items: [
+      { label: t('menu.charactersCards'), action: 'characters:cards' },
+      { label: t('menu.charactersLinks'), action: 'characters:links' },
+    ],
+  },
+  {
+    label: t('menu.locations'),
+    items: [
+      { label: t('menu.locationsMap'), action: 'locations:map' },
+    ],
+  },
+  {
+    label: t('menu.scenes'),
+    items: [
+      { label: t('menu.scenesEditor'), action: 'scenes:editor' },
+      { label: t('menu.scenesStoryline'), action: 'scenes:storyline' },
+    ],
+  },
+  {
+    label: t('menu.quests'),
+    items: [
+      { label: t('menu.questsCards'), action: 'quests:cards' },
+    ],
+  },
+  {
+    label: t('menu.help'),
+    items: [
+      { label: t('menu.helpAbout'), action: 'help:about' },
+    ],
+  },
+])
 
 const openMenu = ref<string | null>(null)
 
@@ -86,6 +92,12 @@ function handleAction(action?: string) {
   // Navigation actions — emit to App.vue
   if (action in navigationActions) {
     emit('navigate', navigationActions[action])
+    return
+  }
+
+  // Special actions
+  if (action === 'app:settings') {
+    emit('open-settings')
     return
   }
 

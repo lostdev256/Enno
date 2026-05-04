@@ -3,6 +3,9 @@ import { ref, onMounted } from 'vue'
 import SceneSidebar from './SceneSidebar.vue'
 import SceneBoard from './SceneBoard.vue'
 import PromptDialog from './PromptDialog.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface SidebarScene { id: string; name: string }
 interface SidebarGroup { id: string; name: string; expanded: boolean; scenes: SidebarScene[] }
@@ -84,7 +87,7 @@ async function deleteScene(id: string) {
 }
 
 async function createGroup() {
-  const name = await showPrompt('Create Group', 'Enter group name...')
+  const name = await showPrompt(t('scenes.createGroup'), t('scenes.enterGroupName'))
   if (!name) return
   await window.ennoAPI.createSceneGroup(name)
   await loadList()
@@ -97,7 +100,7 @@ async function deleteGroup(id: string) {
 
 async function renameGroup(id: string) {
   const group = groups.value.find(g => g.id === id)
-  const newName = await showPrompt('Rename Group', 'Enter new name...', group?.name || '')
+  const newName = await showPrompt(t('scenes.renameGroup'), t('scenes.enterNewName'), group?.name || '')
   if (!newName) return
   await window.ennoAPI.renameSceneGroup(id, newName)
   await loadList()
@@ -169,7 +172,7 @@ onMounted(async () => {
       <div class="empty-icon">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="6" y="8" width="36" height="32" rx="4" stroke="currentColor" stroke-width="2"/><path d="M6 16h36" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.3"/><circle cx="18" cy="12" r="2" fill="currentColor" opacity="0.3"/><circle cx="24" cy="12" r="2" fill="currentColor" opacity="0.3"/><path d="M14 28l6-4v8l-6-4z" fill="currentColor" opacity="0.3"/></svg>
       </div>
-      <p class="empty-text">Select a scene to edit its blueprint</p>
+      <p class="empty-text">{{ t('scenes.selectToEdit') }}</p>
     </div>
 
     <PromptDialog :visible="promptVisible" :title="promptTitle" :placeholder="promptPlaceholder" :initial-value="promptInitialValue" @confirm="onPromptConfirm" @cancel="onPromptCancel" />

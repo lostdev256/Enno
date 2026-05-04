@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import RichTextEditor from './RichTextEditor.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface LocationTreeItem {
   id: string
@@ -138,7 +141,7 @@ watch(() => props.location.id, () => {
     <div class="detail-header">
       <div v-if="!editingName" class="name-display" @dblclick="startEditName">
         <h1 class="loc-name">{{ location.name }}</h1>
-        <button class="edit-btn" @click="startEditName" title="Edit name">
+        <button class="edit-btn" @click="startEditName" :title="t('common.rename')">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M10 2l2 2-7 7H3V9l7-7z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
@@ -159,21 +162,21 @@ watch(() => props.location.id, () => {
       <RichTextEditor 
         :modelValue="location.description || ''"
         @update:modelValue="updateDescription"
-        title="Description"
-        placeholder="Write location description..."
-        emptyText="No description yet. Click edit to add one."
+        :title="t('common.description')"
+        :placeholder="t('locations.writeDescription')"
+        :emptyText="t('characters.noDescriptionYet')"
       />
     </div>
 
     <!-- Map Section -->
     <div class="detail-section map-section">
       <div class="section-header">
-        <span class="section-title">Map</span>
+        <span class="section-title">{{ t('locations.map') }}</span>
         <div class="map-actions">
           <button v-if="location.mapImagePath" class="edit-btn" :class="{ 'save-btn': mapEditMode }" @click="mapEditMode = !mapEditMode">
-            {{ mapEditMode ? 'Done Editing' : 'Edit Map' }}
+            {{ mapEditMode ? t('locations.doneEditing') : t('locations.editMap') }}
           </button>
-          <button class="edit-btn" @click="$emit('upload-map', location.id)" title="Upload Map Image">
+          <button class="edit-btn" @click="$emit('upload-map', location.id)" :title="t('locations.uploadMapImage')">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
         </div>
@@ -206,8 +209,8 @@ watch(() => props.location.id, () => {
 
         <!-- Edit Tools -->
         <div v-if="mapEditMode" class="map-edit-tools">
-          <div class="tools-header">Unplaced Sub-Locations</div>
-          <div v-if="unplacedChildren.length === 0" class="no-unplaced">All children placed.</div>
+          <div class="tools-header">{{ t('locations.unplacedSubLocations') }}</div>
+          <div v-if="unplacedChildren.length === 0" class="no-unplaced">{{ t('locations.allChildrenPlaced') }}</div>
           <div class="unplaced-list">
             <button 
               v-for="child in unplacedChildren" 
@@ -220,14 +223,14 @@ watch(() => props.location.id, () => {
             </button>
           </div>
           <button class="create-child-btn" @click="$emit('create-child', location.id)">
-            + Create New Sub-Location
+            + {{ t('locations.createNewSubLocation') }}
           </button>
         </div>
       </div>
       
       <div v-else class="no-map">
-        <p>No map image uploaded for this location.</p>
-        <button class="upload-map-btn" @click="$emit('upload-map', location.id)">Upload Map</button>
+        <p>{{ t('locations.noMapUploaded') }}</p>
+        <button class="upload-map-btn" @click="$emit('upload-map', location.id)">{{ t('locations.uploadMap') }}</button>
       </div>
     </div>
   </div>

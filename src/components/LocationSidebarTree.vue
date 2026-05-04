@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue'
 import draggable from 'vuedraggable'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface LocationTreeItem {
   id: string
@@ -48,8 +51,8 @@ function handleSelect(id: string) {
           </div>
           <span class="node-name">{{ element.name }}</span>
           <div class="node-actions" @click.stop>
-            <button class="action-btn" title="Add Child Location" @click="$emit('add-child', element.id)">+</button>
-            <button class="action-btn danger" title="Delete Location" @click="$emit('delete', element.id)">×</button>
+            <button class="action-btn" :title="t('locations.addChild')" @click="$emit('add-child', element.id)">+</button>
+            <button class="action-btn danger" :title="t('locations.deleteLocation')" @click="$emit('delete', element.id)">×</button>
           </div>
         </div>
 

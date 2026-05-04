@@ -6,7 +6,9 @@ import LocationsMap from './components/LocationsMap.vue'
 import ScenesPage from './components/ScenesPage.vue'
 import StorylinePage from './components/StorylinePage.vue'
 import QuestsPage from './components/QuestsPage.vue'
+import SettingsWindow from './components/SettingsWindow.vue'
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 type PageName = 'welcome' | 'characters-cards' | 'characters-links' | 'locations-map' | 'scenes-editor' | 'scenes-storyline' | 'quests-cards'
 
@@ -14,6 +16,9 @@ const currentPage = ref<PageName>('welcome')
 const projectOpen = ref(false)
 const projectName = ref<string | null>(null)
 const targetSceneId = ref<string | null>(null)
+const showSettings = ref(false)
+
+const { t } = useI18n()
 
 function handleOpenScene(id: string) {
   targetSceneId.value = id
@@ -97,26 +102,27 @@ function openProject() {
 
 <template>
   <div id="app-root">
-    <MenuBar @navigate="handleNavigate" />
+    <MenuBar @navigate="handleNavigate" @open-settings="showSettings = true" />
+    <SettingsWindow :is-open="showSettings" @close="showSettings = false" />
     <main class="app-content">
       <!-- Welcome -->
       <div v-if="currentPage === 'welcome'" class="welcome-area">
-        <h1 class="app-title">Enno</h1>
-        <p class="app-subtitle">Character & Story Editor</p>
+        <h1 class="app-title">{{ t('app.title') }}</h1>
+        <p class="app-subtitle">{{ t('app.subtitle') }}</p>
 
         <div v-if="!projectOpen" class="welcome-actions">
           <button class="welcome-btn primary" @click="createProject">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            Create Project
+            {{ t('app.createProject') }}
           </button>
           <button class="welcome-btn" @click="openProject">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 7V5a2 2 0 012-2h3l2 2h3a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Open Project
+            {{ t('app.openProject') }}
           </button>
         </div>
 
         <p v-else class="app-hint">
-          <strong>{{ projectName }}</strong> — open <strong>Characters → Cards</strong> to start
+          {{ t('app.hintPrefix') }}<strong>{{ projectName }}</strong>{{ t('app.hintSuffix') }}
         </p>
       </div>
 
