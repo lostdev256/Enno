@@ -2,9 +2,10 @@
 import MenuBar from './components/MenuBar.vue'
 import CharacterCards from './components/CharacterCards.vue'
 import CharacterLinks from './components/CharacterLinks.vue'
+import LocationsMap from './components/LocationsMap.vue'
 import { ref, onMounted } from 'vue'
 
-type PageName = 'welcome' | 'characters-cards' | 'characters-links'
+type PageName = 'welcome' | 'characters-cards' | 'characters-links' | 'locations-map'
 
 const currentPage = ref<PageName>('welcome')
 const projectOpen = ref(false)
@@ -49,6 +50,9 @@ onMounted(() => {
       case 'characters:links':
         if (projectOpen.value) currentPage.value = 'characters-links'
         break
+      case 'locations:map':
+        if (projectOpen.value) currentPage.value = 'locations-map'
+        break
 
       default:
         window.ennoAPI.invokeMenuAction(action)
@@ -60,7 +64,7 @@ function handleNavigate(page: string) {
   // File actions from MenuBar
   if (page.startsWith('file:')) return // handled via IPC above
 
-  if (!projectOpen.value && (page === 'characters-cards' || page === 'characters-links')) {
+  if (!projectOpen.value && (page === 'characters-cards' || page === 'characters-links' || page === 'locations-map')) {
     return // Can't navigate to data pages without a project
   }
   currentPage.value = page as PageName
@@ -103,6 +107,9 @@ function openProject() {
 
       <!-- Characters: Links -->
       <CharacterLinks v-else-if="currentPage === 'characters-links'" />
+
+      <!-- Locations: Map -->
+      <LocationsMap v-else-if="currentPage === 'locations-map'" />
     </main>
   </div>
 </template>

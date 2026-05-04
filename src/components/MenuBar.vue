@@ -33,6 +33,12 @@ const menus: MenuGroup[] = [
     ],
   },
   {
+    label: 'Locations',
+    items: [
+      { label: 'Map', action: 'locations:map' },
+    ],
+  },
+  {
     label: 'Help',
     items: [
       { label: 'About', action: 'help:about' },
@@ -49,6 +55,7 @@ const openMenu = ref<string | null>(null)
 const navigationActions: Record<string, string> = {
   'characters:cards': 'characters-cards',
   'characters:links': 'characters-links',
+  'locations:map': 'locations-map',
 }
 
 function toggleMenu(label: string) {

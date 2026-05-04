@@ -67,6 +67,25 @@ export interface BoardData {
   links: CharacterLink[]
 }
 
+export interface LocationTreeItem {
+  id: string
+  name: string
+  mapX: number | null
+  mapY: number | null
+  children: LocationTreeItem[]
+}
+
+export interface LocationFull {
+  id: string
+  parentId: string | null
+  name: string
+  description: string
+  mapImagePath: string | null
+  mapX: number
+  mapY: number
+  sortOrder: number
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function uuid(): string {
@@ -100,6 +119,7 @@ export class EnnoDatabase {
     // Create media directories
     fs.mkdirSync(path.join(this._workDir, 'media', 'characters', 'avatars'), { recursive: true })
     fs.mkdirSync(path.join(this._workDir, 'media', 'characters', 'gallery'), { recursive: true })
+    fs.mkdirSync(path.join(this._workDir, 'media', 'locations', 'maps'), { recursive: true })
 
     // Init SQLite database
     const dbPath = path.join(this._workDir, 'project.db')
@@ -129,6 +149,7 @@ export class EnnoDatabase {
     // Ensure media dirs exist (for older files that might lack them)
     fs.mkdirSync(path.join(this._workDir, 'media', 'characters', 'avatars'), { recursive: true })
     fs.mkdirSync(path.join(this._workDir, 'media', 'characters', 'gallery'), { recursive: true })
+    fs.mkdirSync(path.join(this._workDir, 'media', 'locations', 'maps'), { recursive: true })
 
     // Open SQLite
     const dbPath = path.join(this._workDir, 'project.db')
@@ -138,6 +159,9 @@ export class EnnoDatabase {
     this.db = new Database(dbPath)
     this.db.pragma('journal_mode = WAL')
     this.db.pragma('foreign_keys = ON')
+    
+    // Ensure all tables exist (migrates older files)
+    this.initSchema()
   }
 
   save(): void {
@@ -241,6 +265,20 @@ export class EnnoDatabase {
         FOREIGN KEY (mode_id) REFERENCES link_modes(id) ON DELETE CASCADE,
         FOREIGN KEY (source_id) REFERENCES characters(id) ON DELETE CASCADE,
         FOREIGN KEY (target_id) REFERENCES characters(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS locations (
+        id TEXT PRIMARY KEY,
+        parent_id TEXT NULL,
+        name TEXT NOT NULL DEFAULT 'New Location',
+        description TEXT NOT NULL DEFAULT '',
+        map_image_path TEXT,
+        map_x REAL DEFAULT NULL,
+        map_y REAL DEFAULT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (parent_id) REFERENCES locations(id) ON DELETE CASCADE
       );
     `)
 
@@ -667,5 +705,117 @@ export class EnnoDatabase {
     this.ensureOpen()
     const res = this.db!.prepare('DELETE FROM character_links WHERE id = ?').run(id)
     return res.changes > 0
+  }
+
+  // ── Locations ──
+
+  getLocationsFlat(): any[] {
+    this.ensureOpen()
+    return this.db!.prepare('SELECT * FROM locations ORDER BY sort_order ASC').all()
+  }
+
+  getLocationsTree(): LocationTreeItem[] {
+    const flat = this.getLocationsFlat()
+    const map = new Map<string, LocationTreeItem>()
+    const roots: LocationTreeItem[] = []
+
+    for (const loc of flat) {
+      map.set(loc.id, { 
+        id: loc.id, 
+        name: loc.name, 
+        mapX: loc.map_x,
+        mapY: loc.map_y,
+        children: [] 
+      })
+    }
+
+    for (const loc of flat) {
+      const item = map.get(loc.id)!
+      if (loc.parent_id) {
+        const parent = map.get(loc.parent_id)
+        if (parent) {
+          parent.children.push(item)
+        } else {
+          roots.push(item) // Fallback if parent missing
+        }
+      } else {
+        roots.push(item)
+      }
+    }
+    return roots
+  }
+
+  getLocation(id: string): LocationFull | null {
+    this.ensureOpen()
+    const row = this.db!.prepare('SELECT * FROM locations WHERE id = ?').get(id) as any
+    if (!row) return null
+    return {
+      id: row.id,
+      parentId: row.parent_id,
+      name: row.name,
+      description: row.description,
+      mapImagePath: row.map_image_path ? path.join(this._workDir!, row.map_image_path) : null,
+      mapX: row.map_x,
+      mapY: row.map_y,
+      sortOrder: row.sort_order
+    }
+  }
+
+  createLocation(parentId: string | null): string {
+    this.ensureOpen()
+    const id = uuid()
+    const maxOrderRow = this.db!.prepare('SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM locations WHERE IFNULL(parent_id, \'\') = ?').get(parentId || "") as { next: number }
+    this.db!.prepare(`
+      INSERT INTO locations (id, parent_id, sort_order)
+      VALUES (?, ?, ?)
+    `).run(id, parentId, maxOrderRow.next)
+    return id
+  }
+
+  updateLocation(id: string, field: string, value: any): boolean {
+    this.ensureOpen()
+    const validFields = ['name', 'description', 'parent_id', 'map_image_path', 'map_x', 'map_y', 'sort_order']
+    if (!validFields.includes(field)) throw new Error('Invalid field')
+    
+    // Copy map image if needed
+    if (field === 'map_image_path' && value) {
+      const ext = path.extname(value)
+      const fileName = `${uuid()}${ext}`
+      const relPath = path.join('media', 'locations', 'maps', fileName)
+      const absPath = path.join(this._workDir!, relPath)
+      fs.copyFileSync(value, absPath)
+      
+      // Delete old
+      const old = this.db!.prepare('SELECT map_image_path FROM locations WHERE id = ?').get(id) as { map_image_path: string | null }
+      if (old && old.map_image_path) {
+        try { fs.unlinkSync(path.join(this._workDir!, old.map_image_path)) } catch {}
+      }
+      value = relPath
+    }
+
+    const res = this.db!.prepare(`UPDATE locations SET ${field} = ?, updated_at = datetime('now') WHERE id = ?`).run(value, id)
+    return res.changes > 0
+  }
+
+  deleteLocation(id: string): boolean {
+    this.ensureOpen()
+    // Find image to delete
+    const old = this.db!.prepare('SELECT map_image_path FROM locations WHERE id = ?').get(id) as { map_image_path: string | null }
+    if (old && old.map_image_path) {
+      try { fs.unlinkSync(path.join(this._workDir!, old.map_image_path)) } catch {}
+    }
+    const res = this.db!.prepare('DELETE FROM locations WHERE id = ?').run(id)
+    return res.changes > 0
+  }
+
+  updateLocationsStructure(updates: { id: string, parentId: string | null, sortOrder: number }[]): void {
+    this.ensureOpen()
+    const update = this.db!.prepare('UPDATE locations SET parent_id = ?, sort_order = ?, updated_at = datetime("now") WHERE id = ?')
+    const tx = this.db!.transaction(() => {
+      for (const u of updates) {
+        update.run(u.parentId, u.sortOrder, u.id)
+      }
+    })
+    tx()
   }
 }

@@ -1,16 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
-import { useEditor, EditorContent } from '@tiptap/vue-3'
-import StarterKit from '@tiptap/starter-kit'
-import Underline from '@tiptap/extension-underline'
-import Link from '@tiptap/extension-link'
-import Placeholder from '@tiptap/extension-placeholder'
-import TextAlign from '@tiptap/extension-text-align'
-import Highlight from '@tiptap/extension-highlight'
+import { ref, watch, nextTick } from 'vue'
 import ContextMenu from './ContextMenu.vue'
 import ImageLightbox from './ImageLightbox.vue'
 import type { ContextMenuItem } from './ContextMenu.vue'
 import defaultAvatar from '../assets/default-avatar.svg'
+import RichTextEditor from './RichTextEditor.vue'
 
 interface CharacterFull {
   id: string
@@ -49,86 +43,18 @@ function saveName() {
   }
 }
 
-// --- Rich Text Editor (Tiptap) ---
-const editingDesc = ref(false)
-
-const editor = useEditor({
-  extensions: [
-    StarterKit.configure({
-      heading: { levels: [1, 2, 3] },
-    }),
-    Underline,
-    Highlight.configure({ multicolor: false }),
-    Link.configure({ openOnClick: false, autolink: true }),
-    TextAlign.configure({ types: ['heading', 'paragraph'] }),
-    Placeholder.configure({ placeholder: 'Write character description...' }),
-  ],
-  content: '',
-  editable: false,
-  editorProps: {
-    attributes: { class: 'tiptap-content' },
-  },
-})
-
-function startEditDesc() {
-  if (!props.character || !editor.value) return
-  editor.value.commands.setContent(props.character.description || '')
-  editor.value.setEditable(true)
-  editingDesc.value = true
-  nextTick(() => editor.value?.commands.focus('end'))
-}
-
-function stopEditDesc() {
-  if (!props.character || !editor.value) return
-  const html = editor.value.getHTML()
-  const isEmpty = editor.value.isEmpty
-  const newValue = isEmpty ? '' : html
-  if (newValue !== props.character.description) {
-    emit('update', props.character.id, 'description', newValue)
+// --- Rich Text Editor Sync ---
+function updateDescription(newDesc: string) {
+  if (props.character && newDesc !== props.character.description) {
+    emit('update', props.character.id, 'description', newDesc)
   }
-  editor.value.setEditable(false)
-  editingDesc.value = false
 }
 
-// Sync editor content when character changes
+// Reset states when character changes
 watch(() => props.character?.id, () => {
   editingName.value = false
-  editingDesc.value = false
   lightboxVisible.value = false
-  if (editor.value) {
-    editor.value.setEditable(false)
-    if (props.character) {
-      editor.value.commands.setContent(props.character.description || '')
-    }
-  }
 })
-
-watch(() => props.character?.description, (newDesc) => {
-  if (!editor.value || editingDesc.value) return
-  const current = editor.value.getHTML()
-  if (newDesc !== current) {
-    editor.value.commands.setContent(newDesc || '')
-  }
-})
-
-onBeforeUnmount(() => { editor.value?.destroy() })
-
-// --- Toolbar helpers ---
-function isActive(nameOrAttrs: string | Record<string, any>, attrs?: Record<string, any>) {
-  if (typeof nameOrAttrs === 'string') {
-    return editor.value?.isActive(nameOrAttrs, attrs) ?? false
-  }
-  return editor.value?.isActive(nameOrAttrs) ?? false
-}
-
-function addLink() {
-  if (!editor.value) return
-  const prev = editor.value.getAttributes('link').href
-  const url = window.prompt?.('URL:', prev || 'https://') // fallback
-  if (url === null) return
-  if (url === '') { editor.value.chain().focus().extendMarkRange('link').unsetLink().run(); return }
-  editor.value.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-}
 
 // --- Avatar ---
 function getAvatarSrc(url: string | null): string {
@@ -186,53 +112,13 @@ function onGalleryCtxAction(action: string) {
 
     <!-- Description -->
     <div class="detail-section">
-      <div class="section-header">
-        <span class="section-title">Description</span>
-        <button v-if="!editingDesc" class="edit-btn" @click="startEditDesc" title="Edit description">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M10 2l2 2-7 7H3V9l7-7z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button v-else class="edit-btn save-btn" @click="stopEditDesc" title="Save & close">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-      </div>
-
-      <!-- View mode: rendered HTML -->
-      <div v-if="!editingDesc" class="desc-view" @dblclick="startEditDesc">
-        <div v-if="character.description" class="desc-rendered" v-html="character.description"></div>
-        <p v-else class="desc-placeholder">No description yet. Click edit to add one.</p>
-      </div>
-
-      <!-- Edit mode: Tiptap toolbar + editor -->
-      <template v-else>
-        <div class="editor-toolbar" v-if="editor">
-          <button class="tb" :class="{ on: isActive('bold') }" @click="editor!.chain().focus().toggleBold().run()" title="Bold"><b>B</b></button>
-          <button class="tb" :class="{ on: isActive('italic') }" @click="editor!.chain().focus().toggleItalic().run()" title="Italic"><i>I</i></button>
-          <button class="tb" :class="{ on: isActive('underline') }" @click="editor!.chain().focus().toggleUnderline().run()" title="Underline"><u>U</u></button>
-          <button class="tb" :class="{ on: isActive('strike') }" @click="editor!.chain().focus().toggleStrike().run()" title="Strikethrough"><s>S</s></button>
-          <button class="tb" :class="{ on: isActive('highlight') }" @click="editor!.chain().focus().toggleHighlight().run()" title="Highlight">H</button>
-          <div class="tb-sep"></div>
-          <button class="tb" :class="{ on: isActive('heading', { level: 1 }) }" @click="editor!.chain().focus().toggleHeading({ level: 1 }).run()" title="Heading 1">H1</button>
-          <button class="tb" :class="{ on: isActive('heading', { level: 2 }) }" @click="editor!.chain().focus().toggleHeading({ level: 2 }).run()" title="Heading 2">H2</button>
-          <button class="tb" :class="{ on: isActive('heading', { level: 3 }) }" @click="editor!.chain().focus().toggleHeading({ level: 3 }).run()" title="Heading 3">H3</button>
-          <div class="tb-sep"></div>
-          <button class="tb" :class="{ on: isActive('bulletList') }" @click="editor!.chain().focus().toggleBulletList().run()" title="Bullet list">•≡</button>
-          <button class="tb" :class="{ on: isActive('orderedList') }" @click="editor!.chain().focus().toggleOrderedList().run()" title="Ordered list">1.</button>
-          <button class="tb" :class="{ on: isActive('blockquote') }" @click="editor!.chain().focus().toggleBlockquote().run()" title="Quote">❝</button>
-          <button class="tb" :class="{ on: isActive('codeBlock') }" @click="editor!.chain().focus().toggleCodeBlock().run()" title="Code block">&lt;/&gt;</button>
-          <div class="tb-sep"></div>
-          <button class="tb" :class="{ on: isActive('link') }" @click="addLink" title="Link">🔗</button>
-          <div class="tb-sep"></div>
-          <button class="tb" @click="editor!.chain().focus().setTextAlign('left').run()" :class="{ on: isActive({ textAlign: 'left' }) }" title="Align left">⫷</button>
-          <button class="tb" @click="editor!.chain().focus().setTextAlign('center').run()" :class="{ on: isActive({ textAlign: 'center' }) }" title="Align center">☰</button>
-          <button class="tb" @click="editor!.chain().focus().setTextAlign('right').run()" :class="{ on: isActive({ textAlign: 'right' }) }" title="Align right">⫸</button>
-          <div class="tb-spacer"></div>
-          <button class="tb" @click="editor!.chain().focus().undo().run()" :disabled="!editor!.can().undo()" title="Undo">↩</button>
-          <button class="tb" @click="editor!.chain().focus().redo().run()" :disabled="!editor!.can().redo()" title="Redo">↪</button>
-        </div>
-        <div class="editor-wrap editing">
-          <EditorContent :editor="editor" />
-        </div>
-      </template>
+      <RichTextEditor 
+        :modelValue="character.description || ''"
+        @update:modelValue="updateDescription"
+        title="Description"
+        placeholder="Write character description..."
+        emptyText="No description yet. Click edit to add one."
+      />
     </div>
 
     <!-- Gallery -->
@@ -305,51 +191,7 @@ function onGalleryCtxAction(action: string) {
 .save-btn { color:#4ade80 !important; }
 .save-btn:hover { background:rgba(74,222,128,.1) !important; color:#86efac !important; border-color:rgba(74,222,128,.2) !important; }
 
-/* Description view mode */
-.desc-view { cursor:pointer; padding:8px 0; min-height:40px; transition:background .15s; border-radius:8px; }
-.desc-view:hover { background:rgba(255,255,255,.02); }
-.desc-rendered { color:#b0b0c8; font-size:14px; line-height:1.7; }
-.desc-rendered :deep(h1) { font-size:1.6em; font-weight:700; color:#e0e0f0; margin:0 0 .4em; }
-.desc-rendered :deep(h2) { font-size:1.3em; font-weight:600; color:#d0d0e8; margin:0 0 .4em; }
-.desc-rendered :deep(h3) { font-size:1.1em; font-weight:600; color:#c0c0d8; margin:0 0 .4em; }
-.desc-rendered :deep(p) { margin:0 0 .5em; }
-.desc-rendered :deep(ul), .desc-rendered :deep(ol) { padding-left:1.4em; margin:0 0 .5em; }
-.desc-rendered :deep(li) { margin-bottom:.2em; }
-.desc-rendered :deep(blockquote) { border-left:3px solid rgba(100,108,255,.3); padding-left:14px; margin:0 0 .5em; color:#999; font-style:italic; }
-.desc-rendered :deep(code) { background:rgba(255,255,255,.06); padding:2px 6px; border-radius:4px; font-size:.9em; color:#a5b4fc; }
-.desc-rendered :deep(pre) { background:rgba(0,0,0,.3); border-radius:6px; padding:12px; margin:0 0 .5em; overflow-x:auto; }
-.desc-rendered :deep(pre code) { background:none; padding:0; color:#c0c0d8; }
-.desc-rendered :deep(a) { color:#818cf8; text-decoration:underline; }
-.desc-rendered :deep(mark) { background:rgba(255,220,50,.25); color:inherit; border-radius:2px; padding:1px 2px; }
-.desc-placeholder { color:#555; font-style:italic; font-size:14px; margin:0; }
 
-/* Editor Toolbar */
-.editor-toolbar { display:flex; align-items:center; gap:2px; padding:6px 8px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-bottom:none; border-radius:8px 8px 0 0; flex-wrap:wrap; }
-.tb { background:none; border:1px solid transparent; color:#777; width:28px; height:26px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; font-family:inherit; transition:all .12s; padding:0; }
-.tb:hover:not(:disabled) { background:rgba(255,255,255,.06); color:#bbb; }
-.tb.on { background:rgba(100,108,255,.15); color:#a5b4fc; border-color:rgba(100,108,255,.2); }
-.tb:disabled { opacity:.3; cursor:default; }
-.tb-sep { width:1px; height:18px; background:rgba(255,255,255,.06); margin:0 4px; }
-.tb-spacer { flex:1; }
-
-/* Editor Content */
-.editor-wrap { border:1px solid rgba(255,255,255,.06); border-radius:0 0 8px 8px; min-height:150px; }
-.editor-wrap.editing { border-color:rgba(100,108,255,.25); }
-.editor-wrap :deep(.tiptap-content) { padding:16px; color:#c0c0d8; font-size:14px; line-height:1.7; outline:none; min-height:120px; }
-.editor-wrap :deep(.tiptap-content) p { margin:0 0 .5em; }
-.editor-wrap :deep(.tiptap-content) h1 { font-size:1.6em; font-weight:700; color:#e0e0f0; margin:0 0 .4em; }
-.editor-wrap :deep(.tiptap-content) h2 { font-size:1.3em; font-weight:600; color:#d0d0e8; margin:0 0 .4em; }
-.editor-wrap :deep(.tiptap-content) h3 { font-size:1.1em; font-weight:600; color:#c0c0d8; margin:0 0 .4em; }
-.editor-wrap :deep(.tiptap-content) ul, .editor-wrap :deep(.tiptap-content) ol { padding-left:1.4em; margin:0 0 .5em; }
-.editor-wrap :deep(.tiptap-content) li { margin-bottom:.2em; }
-.editor-wrap :deep(.tiptap-content) blockquote { border-left:3px solid rgba(100,108,255,.3); padding-left:14px; margin:0 0 .5em; color:#999; font-style:italic; }
-.editor-wrap :deep(.tiptap-content) code { background:rgba(255,255,255,.06); padding:2px 6px; border-radius:4px; font-size:.9em; color:#a5b4fc; }
-.editor-wrap :deep(.tiptap-content) pre { background:rgba(0,0,0,.3); border-radius:6px; padding:12px; margin:0 0 .5em; overflow-x:auto; }
-.editor-wrap :deep(.tiptap-content) pre code { background:none; padding:0; color:#c0c0d8; }
-.editor-wrap :deep(.tiptap-content) a { color:#818cf8; text-decoration:underline; cursor:pointer; }
-.editor-wrap :deep(.tiptap-content) mark { background:rgba(255,220,50,.25); color:inherit; border-radius:2px; padding:1px 2px; }
-.editor-wrap :deep(.tiptap-content) p.is-editor-empty:first-child::before { content:attr(data-placeholder); float:left; color:#555; pointer-events:none; height:0; }
-.editor-wrap :deep(.tiptap-content):focus { box-shadow:inset 0 0 0 1px rgba(100,108,255,.2); border-radius:0 0 7px 7px; }
 
 /* Gallery */
 .gallery-strip { display:flex; gap:10px; overflow-x:auto; padding:4px 0 8px; }
