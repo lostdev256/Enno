@@ -3,13 +3,22 @@ import MenuBar from './components/MenuBar.vue'
 import CharacterCards from './components/CharacterCards.vue'
 import CharacterLinks from './components/CharacterLinks.vue'
 import LocationsMap from './components/LocationsMap.vue'
+import ScenesPage from './components/ScenesPage.vue'
+import StorylinePage from './components/StorylinePage.vue'
+import QuestsPage from './components/QuestsPage.vue'
 import { ref, onMounted } from 'vue'
 
-type PageName = 'welcome' | 'characters-cards' | 'characters-links' | 'locations-map'
+type PageName = 'welcome' | 'characters-cards' | 'characters-links' | 'locations-map' | 'scenes-editor' | 'scenes-storyline' | 'quests-cards'
 
 const currentPage = ref<PageName>('welcome')
 const projectOpen = ref(false)
 const projectName = ref<string | null>(null)
+const targetSceneId = ref<string | null>(null)
+
+function handleOpenScene(id: string) {
+  targetSceneId.value = id
+  currentPage.value = 'scenes-editor'
+}
 
 onMounted(() => {
   // Listen for project state changes from backend
@@ -53,6 +62,15 @@ onMounted(() => {
       case 'locations:map':
         if (projectOpen.value) currentPage.value = 'locations-map'
         break
+      case 'scenes:editor':
+        if (projectOpen.value) currentPage.value = 'scenes-editor'
+        break
+      case 'scenes:storyline':
+        if (projectOpen.value) currentPage.value = 'scenes-storyline'
+        break
+      case 'quests:cards':
+        if (projectOpen.value) currentPage.value = 'quests-cards'
+        break
 
       default:
         window.ennoAPI.invokeMenuAction(action)
@@ -64,7 +82,7 @@ function handleNavigate(page: string) {
   // File actions from MenuBar
   if (page.startsWith('file:')) return // handled via IPC above
 
-  if (!projectOpen.value && (page === 'characters-cards' || page === 'characters-links' || page === 'locations-map')) {
+  if (!projectOpen.value && page !== 'welcome') {
     return // Can't navigate to data pages without a project
   }
   currentPage.value = page as PageName
@@ -110,6 +128,15 @@ function openProject() {
 
       <!-- Locations: Map -->
       <LocationsMap v-else-if="currentPage === 'locations-map'" />
+
+      <!-- Scenes: Editor -->
+      <ScenesPage v-else-if="currentPage === 'scenes-editor'" :initial-scene-id="targetSceneId" @loaded="targetSceneId = null" />
+
+      <!-- Scenes: Storyline -->
+      <StorylinePage v-else-if="currentPage === 'scenes-storyline'" @open-scene="handleOpenScene" />
+
+      <!-- Quests: Cards -->
+      <QuestsPage v-else-if="currentPage === 'quests-cards'" />
     </main>
   </div>
 </template>

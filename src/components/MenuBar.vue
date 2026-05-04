@@ -39,6 +39,19 @@ const menus: MenuGroup[] = [
     ],
   },
   {
+    label: 'Scenes',
+    items: [
+      { label: 'Editor', action: 'scenes:editor' },
+      { label: 'Storyline', action: 'scenes:storyline' },
+    ],
+  },
+  {
+    label: 'Quests',
+    items: [
+      { label: 'Cards', action: 'quests:cards' },
+    ],
+  },
+  {
     label: 'Help',
     items: [
       { label: 'About', action: 'help:about' },
@@ -56,6 +69,9 @@ const navigationActions: Record<string, string> = {
   'characters:cards': 'characters-cards',
   'characters:links': 'characters-links',
   'locations:map': 'locations-map',
+  'scenes:editor': 'scenes-editor',
+  'scenes:storyline': 'scenes-storyline',
+  'quests:cards': 'quests-cards',
 }
 
 function toggleMenu(label: string) {

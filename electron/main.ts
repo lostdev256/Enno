@@ -154,6 +154,28 @@ function buildMenu() {
             ],
         },
         {
+            label: 'Scenes',
+            submenu: [
+                {
+                    label: 'Editor',
+                    click: () => win?.webContents.send('menu:action', 'scenes:editor'),
+                },
+                {
+                    label: 'Storyline',
+                    click: () => win?.webContents.send('menu:action', 'scenes:storyline'),
+                },
+            ],
+        },
+        {
+            label: 'Quests',
+            submenu: [
+                {
+                    label: 'Cards',
+                    click: () => win?.webContents.send('menu:action', 'quests:cards'),
+                },
+            ],
+        },
+        {
             label: 'Help',
             submenu: [
                 {
@@ -460,6 +482,239 @@ ipcMain.handle('locations:map:update-coords', async (_event, id: string, x: numb
     return db.updateLocation(id, 'map_y', y)
 })
 
+// --------- Scenes IPC Handlers ---------
+
+ipcMain.handle('scenes:list', async () => {
+    if (!db.isOpen) return { groups: [], ungrouped: [] }
+    return db.getScenesList()
+})
+
+ipcMain.handle('scenes:create', async () => {
+    if (!db.isOpen) return null
+    return db.createScene()
+})
+
+ipcMain.handle('scenes:get', async (_event, id: string) => {
+    if (!db.isOpen) return null
+    return db.getScene(id)
+})
+
+ipcMain.handle('scenes:update', async (_event, id: string, field: string, value: string) => {
+    if (!db.isOpen) return false
+    return db.updateScene(id, field, value)
+})
+
+ipcMain.handle('scenes:delete', async (_event, id: string) => {
+    if (!db.isOpen) return false
+    return db.deleteScene(id)
+})
+
+ipcMain.handle('scenes:reorder', async (_event, order: any) => {
+    if (!db.isOpen) return false
+    db.reorderScenes(order)
+    return true
+})
+
+ipcMain.handle('scenes:group:create', async (_event, name: string) => {
+    if (!db.isOpen) return null
+    return db.createSceneGroup(name)
+})
+
+ipcMain.handle('scenes:group:delete', async (_event, id: string) => {
+    if (!db.isOpen) return false
+    return db.deleteSceneGroup(id)
+})
+
+ipcMain.handle('scenes:group:rename', async (_event, id: string, name: string) => {
+    if (!db.isOpen) return false
+    return db.renameSceneGroup(id, name)
+})
+
+ipcMain.handle('scenes:characters:add', async (_event, sceneId: string, characterId: string) => {
+    if (!db.isOpen) return false
+    return db.addSceneCharacter(sceneId, characterId)
+})
+
+ipcMain.handle('scenes:characters:remove', async (_event, sceneId: string, characterId: string) => {
+    if (!db.isOpen) return false
+    return db.removeSceneCharacter(sceneId, characterId)
+})
+
+ipcMain.handle('scenes:actions:create', async (_event, sceneId: string, actionType: string, x: number, y: number) => {
+    if (!db.isOpen) return null
+    return db.createSceneAction(sceneId, actionType, x, y)
+})
+
+ipcMain.handle('scenes:actions:update', async (_event, id: string, data: string) => {
+    if (!db.isOpen) return false
+    return db.updateSceneAction(id, data)
+})
+
+ipcMain.handle('scenes:actions:move', async (_event, id: string, x: number, y: number) => {
+    if (!db.isOpen) return false
+    return db.moveSceneAction(id, x, y)
+})
+
+ipcMain.handle('scenes:actions:delete', async (_event, id: string) => {
+    if (!db.isOpen) return false
+    return db.deleteSceneAction(id)
+})
+
+ipcMain.handle('scenes:actions:gallery:add', async (_event, actionId: string) => {
+    if (!db.isOpen) return { success: false }
+    const result = await dialog.showOpenDialog({
+        properties: ['openFile', 'multiSelections'],
+        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }],
+    })
+    if (result.canceled || result.filePaths.length === 0) return { success: false }
+    const images = db.importSceneActionGallery(actionId, result.filePaths)
+    return { success: true, images }
+})
+
+ipcMain.handle('scenes:actions:gallery:remove', async (_event, imageId: string) => {
+    if (!db.isOpen) return false
+    return db.removeSceneActionGalleryImage(imageId)
+})
+
+ipcMain.handle('scenes:connections:create', async (_event, sceneId: string, sourceActionId: string, sourcePin: string, targetActionId: string, targetPin: string) => {
+    if (!db.isOpen) return null
+    return db.createSceneConnection(sceneId, sourceActionId, sourcePin, targetActionId, targetPin)
+})
+
+ipcMain.handle('scenes:connections:delete', async (_event, id: string) => {
+    if (!db.isOpen) return false
+    return db.deleteSceneConnection(id)
+})
+
+// --------- Quests IPC Handlers ---------
+
+ipcMain.handle('quests:list', async () => {
+    if (!db.isOpen) return { groups: [], ungrouped: [] }
+    return db.getQuestsList()
+})
+
+ipcMain.handle('quests:create', async (_event, parentId?: string, groupId?: string) => {
+    if (!db.isOpen) return null
+    return db.createQuest(parentId, groupId)
+})
+
+ipcMain.handle('quests:get', async (_event, id: string) => {
+    if (!db.isOpen) return null
+    return db.getQuest(id)
+})
+
+ipcMain.handle('quests:update', async (_event, id: string, field: string, value: string) => {
+    if (!db.isOpen) return false
+    return db.updateQuest(id, field, value)
+})
+
+ipcMain.handle('quests:delete', async (_event, id: string) => {
+    if (!db.isOpen) return false
+    return db.deleteQuest(id)
+})
+
+ipcMain.handle('quests:reorder', async (_event, order: any) => {
+    if (!db.isOpen) return false
+    db.reorderQuests(order)
+    return true
+})
+
+ipcMain.handle('quests:group:create', async (_event, name: string) => {
+    if (!db.isOpen) return null
+    return db.createQuestGroup(name)
+})
+
+ipcMain.handle('quests:group:delete', async (_event, id: string) => {
+    if (!db.isOpen) return false
+    return db.deleteQuestGroup(id)
+})
+
+ipcMain.handle('quests:group:rename', async (_event, id: string, name: string) => {
+    if (!db.isOpen) return false
+    return db.renameQuestGroup(id, name)
+})
+
+ipcMain.handle('quests:icon:upload', async (_event, questId: string) => {
+    if (!db.isOpen) return { success: false }
+    const result = await dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'] }],
+    })
+    if (result.canceled || result.filePaths.length === 0) return { success: false }
+    const iconUrl = db.importQuestIcon(questId, result.filePaths[0])
+    return { success: true, path: iconUrl }
+})
+
+ipcMain.handle('quests:gallery:add', async (_event, questId: string) => {
+    if (!db.isOpen) return { success: false }
+    const result = await dialog.showOpenDialog({
+        properties: ['openFile', 'multiSelections'],
+        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }],
+    })
+    if (result.canceled || result.filePaths.length === 0) return { success: false }
+    const images = db.importQuestGallery(questId, result.filePaths)
+    return { success: true, images }
+})
+
+ipcMain.handle('quests:gallery:remove', async (_event, imageId: string) => {
+    if (!db.isOpen) return false
+    return db.removeQuestGalleryImage(imageId)
+})
+
+ipcMain.handle('quests:structure:update', async (_event, updates: any[]) => {
+    if (!db.isOpen) return false
+    db.updateQuestsStructure(updates)
+    return true
+})
+
+ipcMain.handle('quests:all-flat', async () => {
+    if (!db.isOpen) return []
+    return db.getAllQuestsFlat()
+})
+
+// --------- Storyline IPC Handlers ---------
+
+ipcMain.handle('storyline:get', async () => {
+    if (!db.isOpen) return null
+    return db.getStorylineData()
+})
+
+ipcMain.handle('storyline:node:add', async (_event, nodeType: string, refId: string | null, groupId: string | null, x: number, y: number, data?: string) => {
+    if (!db.isOpen) return null
+    return db.addStorylineNode(nodeType, refId, groupId, x, y, data)
+})
+
+ipcMain.handle('storyline:node:update', async (_event, id: string, x: number, y: number, groupId?: string | null) => {
+    if (!db.isOpen) return false
+    return db.updateStorylineNode(id, x, y, groupId)
+})
+
+ipcMain.handle('storyline:node:update-data', async (_event, id: string, data: string) => {
+    if (!db.isOpen) return false
+    return db.updateStorylineNodeData(id, data)
+})
+
+ipcMain.handle('storyline:node:delete', async (_event, id: string) => {
+    if (!db.isOpen) return false
+    return db.deleteStorylineNode(id)
+})
+
+ipcMain.handle('storyline:connection:create', async (_event, sourceNodeId: string, sourcePin: string, targetNodeId: string, targetPin: string) => {
+    if (!db.isOpen) return null
+    return db.createStorylineConnection(sourceNodeId, sourcePin, targetNodeId, targetPin)
+})
+
+ipcMain.handle('storyline:connection:delete', async (_event, id: string) => {
+    if (!db.isOpen) return false
+    return db.deleteStorylineConnection(id)
+})
+
+ipcMain.handle('storyline:group-position:update', async (_event, groupId: string, x: number, y: number, width: number, height: number) => {
+    if (!db.isOpen) return false
+    db.updateStorylineGroupPosition(groupId, x, y, width, height)
+    return true
+})
+
 // --------- App Ready ---------
 
 app.whenReady().then(() => {
@@ -471,3 +726,4 @@ app.whenReady().then(() => {
     buildMenu()
     createWindow()
 })
+

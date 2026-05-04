@@ -157,4 +157,133 @@ contextBridge.exposeInMainWorld('ennoAPI', {
     updateLocationMapCoords(id: string, x: number, y: number) {
         return ipcRenderer.invoke('locations:map:update-coords', id, x, y)
     },
+
+    // --------- Scenes API ---------
+    getScenesList() {
+        return ipcRenderer.invoke('scenes:list')
+    },
+    createScene() {
+        return ipcRenderer.invoke('scenes:create')
+    },
+    getScene(id: string) {
+        return ipcRenderer.invoke('scenes:get', id)
+    },
+    updateScene(id: string, field: string, value: string) {
+        return ipcRenderer.invoke('scenes:update', id, field, value)
+    },
+    deleteScene(id: string) {
+        return ipcRenderer.invoke('scenes:delete', id)
+    },
+    reorderScenes(order: any) {
+        return ipcRenderer.invoke('scenes:reorder', order)
+    },
+    createSceneGroup(name: string) {
+        return ipcRenderer.invoke('scenes:group:create', name)
+    },
+    deleteSceneGroup(id: string) {
+        return ipcRenderer.invoke('scenes:group:delete', id)
+    },
+    renameSceneGroup(id: string, name: string) {
+        return ipcRenderer.invoke('scenes:group:rename', id, name)
+    },
+    addSceneCharacter(sceneId: string, characterId: string) {
+        return ipcRenderer.invoke('scenes:characters:add', sceneId, characterId)
+    },
+    removeSceneCharacter(sceneId: string, characterId: string) {
+        return ipcRenderer.invoke('scenes:characters:remove', sceneId, characterId)
+    },
+    createSceneAction(sceneId: string, actionType: string, x: number, y: number) {
+        return ipcRenderer.invoke('scenes:actions:create', sceneId, actionType, x, y)
+    },
+    updateSceneAction(id: string, data: string) {
+        return ipcRenderer.invoke('scenes:actions:update', id, data)
+    },
+    moveSceneAction(id: string, x: number, y: number) {
+        return ipcRenderer.invoke('scenes:actions:move', id, x, y)
+    },
+    deleteSceneAction(id: string) {
+        return ipcRenderer.invoke('scenes:actions:delete', id)
+    },
+    addSceneActionGallery(actionId: string) {
+        return ipcRenderer.invoke('scenes:actions:gallery:add', actionId)
+    },
+    removeSceneActionGallery(imageId: string) {
+        return ipcRenderer.invoke('scenes:actions:gallery:remove', imageId)
+    },
+    createSceneConnection(sceneId: string, sourceActionId: string, sourcePin: string, targetActionId: string, targetPin: string) {
+        return ipcRenderer.invoke('scenes:connections:create', sceneId, sourceActionId, sourcePin, targetActionId, targetPin)
+    },
+    deleteSceneConnection(id: string) {
+        return ipcRenderer.invoke('scenes:connections:delete', id)
+    },
+
+    // --------- Quests API ---------
+    getQuestsList() {
+        return ipcRenderer.invoke('quests:list')
+    },
+    createQuest(parentId?: string, groupId?: string) {
+        return ipcRenderer.invoke('quests:create', parentId, groupId)
+    },
+    getQuest(id: string) {
+        return ipcRenderer.invoke('quests:get', id)
+    },
+    updateQuest(id: string, field: string, value: string) {
+        return ipcRenderer.invoke('quests:update', id, field, value)
+    },
+    deleteQuest(id: string) {
+        return ipcRenderer.invoke('quests:delete', id)
+    },
+    reorderQuests(order: any) {
+        return ipcRenderer.invoke('quests:reorder', order)
+    },
+    createQuestGroup(name: string) {
+        return ipcRenderer.invoke('quests:group:create', name)
+    },
+    deleteQuestGroup(id: string) {
+        return ipcRenderer.invoke('quests:group:delete', id)
+    },
+    renameQuestGroup(id: string, name: string) {
+        return ipcRenderer.invoke('quests:group:rename', id, name)
+    },
+    uploadQuestIcon(questId: string) {
+        return ipcRenderer.invoke('quests:icon:upload', questId)
+    },
+    addQuestGallery(questId: string) {
+        return ipcRenderer.invoke('quests:gallery:add', questId)
+    },
+    removeQuestGallery(imageId: string) {
+        return ipcRenderer.invoke('quests:gallery:remove', imageId)
+    },
+    updateQuestsStructure(updates: any[]) {
+        return ipcRenderer.invoke('quests:structure:update', updates)
+    },
+    getAllQuestsFlat() {
+        return ipcRenderer.invoke('quests:all-flat')
+    },
+
+    // --------- Storyline API ---------
+    getStorylineData() {
+        return ipcRenderer.invoke('storyline:get')
+    },
+    addStorylineNode(nodeType: string, refId: string | null, groupId: string | null, x: number, y: number, data?: string) {
+        return ipcRenderer.invoke('storyline:node:add', nodeType, refId, groupId, x, y, data)
+    },
+    updateStorylineNode(id: string, x: number, y: number, groupId?: string | null) {
+        return ipcRenderer.invoke('storyline:node:update', id, x, y, groupId)
+    },
+    updateStorylineNodeData(id: string, data: string) {
+        return ipcRenderer.invoke('storyline:node:update-data', id, data)
+    },
+    deleteStorylineNode(id: string) {
+        return ipcRenderer.invoke('storyline:node:delete', id)
+    },
+    createStorylineConnection(sourceNodeId: string, sourcePin: string, targetNodeId: string, targetPin: string) {
+        return ipcRenderer.invoke('storyline:connection:create', sourceNodeId, sourcePin, targetNodeId, targetPin)
+    },
+    deleteStorylineConnection(id: string) {
+        return ipcRenderer.invoke('storyline:connection:delete', id)
+    },
+    updateStorylineGroupPosition(groupId: string, x: number, y: number, width: number, height: number) {
+        return ipcRenderer.invoke('storyline:group-position:update', groupId, x, y, width, height)
+    },
 })
