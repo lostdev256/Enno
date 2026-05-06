@@ -1,4 +1,4 @@
-import { ipcRenderer, contextBridge } from 'electron'
+import {ipcRenderer, contextBridge} from 'electron'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -32,7 +32,11 @@ contextBridge.exposeInMainWorld('ennoAPI', {
     },
 
     // --------- Project State ---------
-    onProjectStateChange(callback: (state: { isOpen: boolean, filePath: string | null, projectName: string | null }) => void) {
+    onProjectStateChange(callback: (state: {
+        isOpen: boolean,
+        filePath: string | null,
+        projectName: string | null
+    }) => void) {
         ipcRenderer.on('project:state-changed', (_event, state) => callback(state))
     },
     offProjectStateChange() {
