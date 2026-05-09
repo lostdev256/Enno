@@ -1,3 +1,3 @@
-import {enno} from './enno'
+import {enno} from "./enno";
 
-enno.runApp()
+enno.runApp();

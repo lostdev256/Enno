@@ -1,9 +1,9 @@
 import {createStore} from "./store";
-import {createDB} from "./database";
+import {createDB} from "./db";
 import {createWindow} from "./window";
 import {registerIpcHandlers} from "./handlers";
 
-import {app, protocol, net} from 'electron'
+import {app, protocol, net} from "electron";
 import {pathToFileURL} from "node:url";
 
 class Enno {
@@ -17,14 +17,14 @@ class Enno {
     }
 
     private initApp() {
-        app.on('before-quit', () => this.deinitApp());
-        app.on('window-all-closed', () => this.shutdownApp());
+        app.on("before-quit", () => this.deinitApp());
+        app.on("window-all-closed", () => this.shutdownApp());
 
         if (!app.isPackaged) {
-            app.commandLine.appendSwitch('remote-debugging-port', '9222');
+            app.commandLine.appendSwitch("remote-debugging-port", "9222");
         }
 
-        registerIpcHandlers()
+        registerIpcHandlers();
     }
 
     private deinitApp() {
@@ -32,9 +32,9 @@ class Enno {
     }
 
     private processApp() {
-        protocol.handle('enno', (request) => {
-            const filePath = decodeURIComponent(request.url.replace('enno://', ''))
-            return net.fetch(pathToFileURL(filePath).href)
+        protocol.handle("enno", (request) => {
+            const filePath = decodeURIComponent(request.url.replace("enno://", ""));
+            return net.fetch(pathToFileURL(filePath).href);
         });
 
         this.wnd.openWindow();
