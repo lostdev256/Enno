@@ -119,6 +119,15 @@ export class EnnoDatabase {
 
     // ── Lifecycle ──
 
+    private syncMediaDirs(workDir: string) {
+        fs.mkdirSync(path.join(workDir, 'media', 'characters', 'avatars'), {recursive: true})
+        fs.mkdirSync(path.join(workDir, 'media', 'characters', 'gallery'), {recursive: true})
+        fs.mkdirSync(path.join(workDir, 'media', 'locations', 'maps'), {recursive: true})
+        fs.mkdirSync(path.join(workDir, 'media', 'scenes', 'action_gallery'), {recursive: true})
+        fs.mkdirSync(path.join(workDir, 'media', 'quests', 'icons'), {recursive: true})
+        fs.mkdirSync(path.join(workDir, 'media', 'quests', 'gallery'), {recursive: true})
+    }
+
     create(filePath: string): void {
         this.close()
 
@@ -127,12 +136,7 @@ export class EnnoDatabase {
         this._filePath = filePath
 
         // Create media directories
-        fs.mkdirSync(path.join(this._workDir, 'media', 'characters', 'avatars'), {recursive: true})
-        fs.mkdirSync(path.join(this._workDir, 'media', 'characters', 'gallery'), {recursive: true})
-        fs.mkdirSync(path.join(this._workDir, 'media', 'locations', 'maps'), {recursive: true})
-        fs.mkdirSync(path.join(this._workDir, 'media', 'scenes', 'action_gallery'), {recursive: true})
-        fs.mkdirSync(path.join(this._workDir, 'media', 'quests', 'icons'), {recursive: true})
-        fs.mkdirSync(path.join(this._workDir, 'media', 'quests', 'gallery'), {recursive: true})
+        this.syncMediaDirs(this._workDir)
 
         // Init SQLite database
         const dbPath = path.join(this._workDir, 'project.db')
@@ -160,12 +164,7 @@ export class EnnoDatabase {
         zip.extractAllTo(this._workDir, true)
 
         // Ensure media dirs exist (for older files that might lack them)
-        fs.mkdirSync(path.join(this._workDir, 'media', 'characters', 'avatars'), {recursive: true})
-        fs.mkdirSync(path.join(this._workDir, 'media', 'characters', 'gallery'), {recursive: true})
-        fs.mkdirSync(path.join(this._workDir, 'media', 'locations', 'maps'), {recursive: true})
-        fs.mkdirSync(path.join(this._workDir, 'media', 'scenes', 'action_gallery'), {recursive: true})
-        fs.mkdirSync(path.join(this._workDir, 'media', 'quests', 'icons'), {recursive: true})
-        fs.mkdirSync(path.join(this._workDir, 'media', 'quests', 'gallery'), {recursive: true})
+        this.syncMediaDirs(this._workDir)
 
         // Open SQLite
         const dbPath = path.join(this._workDir, 'project.db')
@@ -1302,8 +1301,7 @@ export class EnnoDatabase {
     private createTempDir(): string {
         const tmpBase = path.join(app.getPath('temp'), 'enno-projects')
         fs.mkdirSync(tmpBase, {recursive: true})
-        const dir = fs.mkdtempSync(path.join(tmpBase, 'proj-'))
-        return dir
+        return fs.mkdtempSync(path.join(tmpBase, 'proj-'))
     }
 
     private resolveMediaPath(relativePath: string): string {
