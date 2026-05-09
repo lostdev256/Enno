@@ -1,284 +1,286 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
+import {ref, computed, onMounted, onUnmounted} from "vue";
+import {useI18n} from "vue-i18n";
 
 // --- Menu data structure ---
 interface MenuItem {
-  label: string
-  action?: string
-  shortcut?: string
-  separator?: boolean
+    label: string;
+    action?: string;
+    shortcut?: string;
+    separator?: boolean;
 }
 
 interface MenuGroup {
-  label: string
-  items: MenuItem[]
+    label: string;
+    items: MenuItem[];
 }
 
 const emit = defineEmits<{
-  (e: 'navigate', page: string): void
-  (e: 'open-settings'): void
-}>()
+    (e: "navigate", page: string): void
+    (e: "open-settings"): void
+}>();
 
-const { t } = useI18n()
+const {t} = useI18n();
 
 const menus = computed<MenuGroup[]>(() => [
-  {
-    label: t('menu.file'),
-    items: [
-      { label: t('menu.fileCreate'), action: 'file:create', shortcut: '⌘N' },
-      { label: t('menu.fileOpen'), action: 'file:open', shortcut: '⌘O' },
-      { separator: true, label: '' },
-      { label: t('menu.fileSave'), action: 'file:save', shortcut: '⌘S' },
-      { label: t('menu.fileSaveAs'), action: 'file:save-as', shortcut: '⇧⌘S' },
-      { separator: true, label: '' },
-      { label: t('menu.settings'), action: 'app:settings', shortcut: '⌘,' },
-    ],
-  },
-  {
-    label: t('menu.characters'),
-    items: [
-      { label: t('menu.charactersCards'), action: 'characters:cards' },
-      { label: t('menu.charactersLinks'), action: 'characters:links' },
-    ],
-  },
-  {
-    label: t('menu.locations'),
-    items: [
-      { label: t('menu.locationsMap'), action: 'locations:map' },
-    ],
-  },
-  {
-    label: t('menu.scenes'),
-    items: [
-      { label: t('menu.scenesEditor'), action: 'scenes:editor' },
-      { label: t('menu.scenesStoryline'), action: 'scenes:storyline' },
-    ],
-  },
-  {
-    label: t('menu.quests'),
-    items: [
-      { label: t('menu.questsCards'), action: 'quests:cards' },
-    ],
-  },
-  {
-    label: t('menu.help'),
-    items: [
-      { label: t('menu.helpAbout'), action: 'help:about' },
-    ],
-  },
-])
+    {
+        label: t("menu.file"),
+        items: [
+            {label: t("menu.fileCreate"), action: "file:create", shortcut: "⌘N"},
+            {label: t("menu.fileOpen"), action: "file:open", shortcut: "⌘O"},
+            {separator: true, label: ""},
+            {label: t("menu.fileSave"), action: "file:save", shortcut: "⌘S"},
+            {label: t("menu.fileSaveAs"), action: "file:save-as", shortcut: "⇧⌘S"},
+            {separator: true, label: ""},
+            {label: t("menu.settings"), action: "app:settings", shortcut: "⌘,"}
+        ]
+    },
+    {
+        label: t("menu.characters"),
+        items: [
+            {label: t("menu.charactersCards"), action: "characters:cards"},
+            {label: t("menu.charactersLinks"), action: "characters:links"}
+        ]
+    },
+    {
+        label: t("menu.locations"),
+        items: [
+            {label: t("menu.locationsMap"), action: "locations:map"}
+        ]
+    },
+    {
+        label: t("menu.scenes"),
+        items: [
+            {label: t("menu.scenesEditor"), action: "scenes:editor"},
+            {label: t("menu.scenesStoryline"), action: "scenes:storyline"}
+        ]
+    },
+    {
+        label: t("menu.quests"),
+        items: [
+            {label: t("menu.questsCards"), action: "quests:cards"}
+        ]
+    },
+    {
+        label: t("menu.help"),
+        items: [
+            {label: t("menu.helpAbout"), action: "help:about"}
+        ]
+    }
+]);
 
-const openMenu = ref<string | null>(null)
+const openMenu = ref<string | null>(null);
 
 const navigationActions: Record<string, string> = {
-  'characters:cards': 'characters-cards',
-  'characters:links': 'characters-links',
-  'locations:map': 'locations-map',
-  'scenes:editor': 'scenes-editor',
-  'scenes:storyline': 'scenes-storyline',
-  'quests:cards': 'quests-cards',
-}
+    "characters:cards": "characters-cards",
+    "characters:links": "characters-links",
+    "locations:map": "locations-map",
+    "scenes:editor": "scenes-editor",
+    "scenes:storyline": "scenes-storyline",
+    "quests:cards": "quests-cards"
+};
 
 function toggleMenu(label: string) {
-  openMenu.value = openMenu.value === label ? null : label
+    openMenu.value = openMenu.value === label ? null : label;
 }
 
 function handleAction(action?: string) {
-  openMenu.value = null
-  if (!action) return
-  console.log(`[MenuBar] action: ${action}`)
+    openMenu.value = null;
+    if (!action) return;
+    console.log(`[MenuBar] action: ${action}`);
 
-  // Navigation actions — emit to App.vue
-  if (action in navigationActions) {
-    emit('navigate', navigationActions[action])
-    return
-  }
+    // Navigation actions — emit to App.vue
+    if (action in navigationActions) {
+        emit("navigate", navigationActions[action]);
+        return;
+    }
 
-  // Special actions
-  if (action === 'app:settings') {
-    emit('open-settings')
-    return
-  }
+    // Special actions
+    if (action === "app:settings") {
+        emit("open-settings");
+        return;
+    }
 
-  // Backend actions — send via IPC
-  window.ennoAPI.invokeMenuAction(action)
+    // Backend actions — send via IPC
+    window.ennoAPI.invokeMenuAction(action);
 }
 
 function closeMenu(event: MouseEvent) {
-  const target = event.target as HTMLElement
-  if (!target.closest('.menubar')) {
-    openMenu.value = null
-  }
+    const target = event.target as HTMLElement;
+    if (!target.closest(".menubar")) {
+        openMenu.value = null;
+    }
 }
 
 onMounted(() => {
-  document.addEventListener('click', closeMenu)
-})
+    document.addEventListener("click", closeMenu);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('click', closeMenu)
-})
+    document.removeEventListener("click", closeMenu);
+});
 </script>
 
 <template>
-  <nav class="menubar" id="app-menubar">
-    <div class="menubar-brand">Enno</div>
-    <div
-      v-for="menu in menus"
-      :key="menu.label"
-      class="menubar-item"
-    >
-      <button
-        :id="`menu-${menu.label.toLowerCase()}`"
-        class="menubar-trigger"
-        :class="{ active: openMenu === menu.label }"
-        @click.stop="toggleMenu(menu.label)"
-        @mouseenter="openMenu && (openMenu = menu.label)"
-      >
-        {{ menu.label }}
-      </button>
-      <Transition name="dropdown">
+    <nav class="menubar" id="app-menubar">
+        <div class="menubar-brand">Enno</div>
         <div
-          v-if="openMenu === menu.label"
-          class="menubar-dropdown"
+            v-for="menu in menus"
+            :key="menu.label"
+            class="menubar-item"
         >
-          <template v-for="item in menu.items" :key="item.label">
-            <div v-if="item.separator" class="dropdown-separator"></div>
             <button
-              v-else
-              :id="`menu-action-${item.action}`"
-              class="dropdown-item"
-              @click="handleAction(item.action)"
+                :id="`menu-${menu.label.toLowerCase()}`"
+                class="menubar-trigger"
+                :class="{ active: openMenu === menu.label }"
+                @click.stop="toggleMenu(menu.label)"
+                @mouseenter="openMenu && (openMenu = menu.label)"
             >
-              <span class="dropdown-label">{{ item.label }}</span>
-              <span v-if="item.shortcut" class="dropdown-shortcut">{{ item.shortcut }}</span>
+                {{ menu.label }}
             </button>
-          </template>
+            <Transition name="dropdown">
+                <div
+                    v-if="openMenu === menu.label"
+                    class="menubar-dropdown"
+                >
+                    <template v-for="item in menu.items" :key="item.label">
+                        <div v-if="item.separator" class="dropdown-separator"></div>
+                        <button
+                            v-else
+                            :id="`menu-action-${item.action}`"
+                            class="dropdown-item"
+                            @click="handleAction(item.action)"
+                        >
+                            <span class="dropdown-label">{{ item.label }}</span>
+                            <span v-if="item.shortcut" class="dropdown-shortcut">{{ item.shortcut }}</span>
+                        </button>
+                    </template>
+                </div>
+            </Transition>
         </div>
-      </Transition>
-    </div>
-  </nav>
+    </nav>
 </template>
 
 <style scoped>
 .menubar {
-  display: flex;
-  align-items: center;
-  height: 36px;
-  background: linear-gradient(180deg, #2a2a2e 0%, #1e1e22 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 0 8px;
-  user-select: none;
-  -webkit-app-region: drag;
-  position: relative;
-  z-index: 1000;
-  flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    height: 36px;
+    background: linear-gradient(180deg, #2a2a2e 0%, #1e1e22 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0 8px;
+    user-select: none;
+    -webkit-app-region: drag;
+    position: relative;
+    z-index: 1000;
+    flex-shrink: 0;
 }
 
 .menubar-brand {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: #b8b8cc;
-  padding: 0 12px 0 8px;
-  margin-right: 4px;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  -webkit-app-region: no-drag;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #b8b8cc;
+    padding: 0 12px 0 8px;
+    margin-right: 4px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    -webkit-app-region: no-drag;
 }
 
 .menubar-item {
-  position: relative;
-  -webkit-app-region: no-drag;
+    position: relative;
+    -webkit-app-region: no-drag;
 }
 
 .menubar-trigger {
-  background: none;
-  border: none;
-  color: #c0c0d0;
-  font-size: 12.5px;
-  font-weight: 500;
-  font-family: inherit;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  line-height: 1;
+    background: none;
+    border: none;
+    color: #c0c0d0;
+    font-size: 12.5px;
+    font-weight: 500;
+    font-family: inherit;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    line-height: 1;
 }
 
 .menubar-trigger:hover,
 .menubar-trigger.active {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
 }
 
 .menubar-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  min-width: 200px;
-  background: #2c2c32;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 4px 0;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.45),
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 200px;
+    background: #2c2c32;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 4px 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45),
     0 2px 8px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(20px);
-  z-index: 1001;
+    backdrop-filter: blur(20px);
+    z-index: 1001;
 }
 
 .dropdown-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: none;
-  border: none;
-  color: #d0d0e0;
-  font-size: 12.5px;
-  font-family: inherit;
-  padding: 6px 14px;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-  text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    color: #d0d0e0;
+    font-size: 12.5px;
+    font-family: inherit;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    text-align: left;
 }
 
 .dropdown-item:hover {
-  background: rgba(100, 108, 255, 0.18);
-  color: #ffffff;
+    background: rgba(100, 108, 255, 0.18);
+    color: #ffffff;
 }
 
 .dropdown-label {
-  flex: 1;
+    flex: 1;
 }
 
 .dropdown-shortcut {
-  margin-left: 24px;
-  font-size: 11px;
-  color: #777790;
-  font-weight: 400;
+    margin-left: 24px;
+    font-size: 11px;
+    color: #777790;
+    font-weight: 400;
 }
 
 .dropdown-separator {
-  height: 1px;
-  margin: 4px 8px;
-  background: rgba(255, 255, 255, 0.08);
+    height: 1px;
+    margin: 4px 8px;
+    background: rgba(255, 255, 255, 0.08);
 }
 
 /* --- Dropdown transition --- */
 .dropdown-enter-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
+
 .dropdown-leave-active {
-  transition: opacity 0.1s ease, transform 0.1s ease;
+    transition: opacity 0.1s ease, transform 0.1s ease;
 }
+
 .dropdown-enter-from {
-  opacity: 0;
-  transform: translateY(-4px);
+    opacity: 0;
+    transform: translateY(-4px);
 }
+
 .dropdown-leave-to {
-  opacity: 0;
-  transform: translateY(-2px);
+    opacity: 0;
+    transform: translateY(-2px);
 }
 </style>

@@ -1,6 +1,6 @@
-import type { EnnoAPI } from '../electron/api'
+import type {EnnoAPI} from "../electron/api";
 
-export {}
+export {};
 
 declare global {
     interface Window {
@@ -8,7 +8,7 @@ declare global {
     }
 }
 
-declare module '*.sql?raw' {
-    const content: string
-    export default content
+declare module "*.sql?raw" {
+    const content: string;
+    export default content;
 }
