@@ -47,7 +47,7 @@ class Window {
         if (!this._wnd) return;
         this._wnd.webContents.send("project:state-changed", {
             isOpen: enno.db.isOpen,
-            filePath: enno.db.filePath,
+            filePath: enno.db.projectFilePath,
             projectName: enno.db.projectName
         });
         this.updateWindowTitle();

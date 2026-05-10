@@ -6,13 +6,13 @@ export function registerCharactersIpcHandlers() {
     ipcMain.handle("characters:list", async () => {
         console.log("[IPC] characters:list");
         if (!enno.db.isOpen) return {groups: [], ungrouped: []};
-        return enno.db.getCharactersList();
+        return enno.db.characters?.getCharactersList();
     });
 
     ipcMain.handle("characters:get", async (_event, id: string) => {
         console.log(`[IPC] characters:get — ${id}`);
         if (!enno.db.isOpen) return {success: false, error: "No project open"};
-        const character = enno.db.getCharacter(id);
+        const character = enno.db.characters?.getCharacter(id);
         if (!character) return {success: false, error: "Character not found"};
         return {success: true, character};
     });
@@ -20,49 +20,49 @@ export function registerCharactersIpcHandlers() {
     ipcMain.handle("characters:create", async () => {
         console.log("[IPC] characters:create");
         if (!enno.db.isOpen) return {success: false, error: "No project open"};
-        const character = enno.db.createCharacter();
+        const character = enno.db.characters?.createCharacter();
         return {success: true, character};
     });
 
     ipcMain.handle("characters:update", async (_event, id: string, field: string, value: string) => {
         console.log(`[IPC] characters:update — ${id}.${field}`);
         if (!enno.db.isOpen) return {success: false, error: "No project open"};
-        const ok = enno.db.updateCharacter(id, field, value);
+        const ok = enno.db.characters?.updateCharacter(id, field, value);
         return {success: ok};
     });
 
     ipcMain.handle("characters:delete", async (_event, id: string) => {
         console.log(`[IPC] characters:delete — ${id}`);
         if (!enno.db.isOpen) return {success: false, error: "No project open"};
-        const ok = enno.db.deleteCharacter(id);
+        const ok = enno.db.characters?.deleteCharacter(id);
         return {success: ok};
     });
 
     ipcMain.handle("characters:reorder", async (_event, order) => {
         console.log("[IPC] characters:reorder");
         if (!enno.db.isOpen) return {success: false, error: "No project open"};
-        enno.db.reorderCharacters(order);
+        enno.db.characters?.reorderCharacters(order);
         return {success: true};
     });
 
     ipcMain.handle("characters:group:create", async (_event, name: string) => {
         console.log(`[IPC] characters:group:create — ${name}`);
         if (!enno.db.isOpen) return {success: false, error: "No project open"};
-        const group = enno.db.createGroup(name);
+        const group = enno.db.characters?.createGroup(name);
         return {success: true, group: {...group, expanded: true, characters: []}};
     });
 
     ipcMain.handle("characters:group:delete", async (_event, groupId: string) => {
         console.log(`[IPC] characters:group:delete — ${groupId}`);
         if (!enno.db.isOpen) return {success: false, error: "No project open"};
-        const ok = enno.db.deleteGroup(groupId);
+        const ok = enno.db.characters?.deleteGroup(groupId);
         return {success: ok};
     });
 
     ipcMain.handle("characters:group:rename", async (_event, groupId: string, newName: string) => {
         console.log(`[IPC] characters:group:rename — ${groupId} → ${newName}`);
         if (!enno.db.isOpen) return {success: false, error: "No project open"};
-        const ok = enno.db.renameGroup(groupId, newName);
+        const ok = enno.db.characters?.renameGroup(groupId, newName);
         return {success: ok};
     });
 
@@ -76,7 +76,7 @@ export function registerCharactersIpcHandlers() {
         });
         if (result.canceled || result.filePaths.length === 0) return {success: false, cancelled: true};
 
-        const avatarUrl = enno.db.importAvatar(characterId, result.filePaths[0]);
+        const avatarUrl = enno.db.characters?.importAvatar(characterId, result.filePaths[0]);
         return {success: true, path: avatarUrl};
     });
 
@@ -90,7 +90,7 @@ export function registerCharactersIpcHandlers() {
         });
         if (result.canceled || result.filePaths.length === 0) return {success: false, cancelled: true};
 
-        const images = enno.db.importGalleryImages(characterId, result.filePaths);
+        const images = enno.db.characters?.importGalleryImages(characterId, result.filePaths);
         return {success: true, images};
     });
 
@@ -98,63 +98,63 @@ export function registerCharactersIpcHandlers() {
         console.log(`[IPC] characters:gallery:remove — ${imageId}`);
         if (!enno.db.isOpen) return {success: false, error: "No project open"};
 
-        const ok = enno.db.removeGalleryImage(imageId);
+        const ok = enno.db.characters?.removeGalleryImage(imageId);
         return {success: ok};
     });
 
     ipcMain.handle("characters:board:get", async () => {
         if (!enno.db.isOpen) return null;
-        return enno.db.getBoardData();
+        return enno.db.characters?.getBoardData();
     });
 
     ipcMain.handle("characters:board:addNode", async (_event, characterId: string, x: number, y: number) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.addBoardNode(characterId, x, y);
+        return enno.db.characters?.addBoardNode(characterId, x, y);
     });
 
     ipcMain.handle("characters:board:updateNodePosition", async (_event, characterId: string, x: number, y: number) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.updateBoardNode(characterId, x, y);
+        return enno.db.characters?.updateBoardNode(characterId, x, y);
     });
 
     ipcMain.handle("characters:board:removeNode", async (_event, characterId: string) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.removeBoardNode(characterId);
+        return enno.db.characters?.removeBoardNode(characterId);
     });
 
     ipcMain.handle("characters:linkModes:create", async (_event, name: string, maxLinks: number, dataType: "text" | "enum", settings: string) => {
         if (!enno.db.isOpen) return null;
-        return enno.db.createLinkMode(name, maxLinks, dataType, settings);
+        return enno.db.characters?.createLinkMode(name, maxLinks, dataType, settings);
     });
 
     ipcMain.handle("characters:linkModes:update", async (_event, id: string, name: string, maxLinks: number, dataType: "text" | "enum", settings: string) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.updateLinkMode(id, name, maxLinks, dataType, settings);
+        return enno.db.characters?.updateLinkMode(id, name, maxLinks, dataType, settings);
     });
 
     ipcMain.handle("characters:linkModes:delete", async (_event, id: string) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.deleteLinkMode(id);
+        return enno.db.characters?.deleteLinkMode(id);
     });
 
     ipcMain.handle("characters:linkModes:reorder", async (_event, modeIds: string[]) => {
         if (!enno.db.isOpen) return false;
-        enno.db.reorderLinkModes(modeIds);
+        enno.db.characters?.reorderLinkModes(modeIds);
         return true;
     });
 
     ipcMain.handle("characters:links:create", async (_event, modeId: string, sourceId: string, targetId: string, value: string) => {
         if (!enno.db.isOpen) return null;
-        return enno.db.createLink(modeId, sourceId, targetId, value);
+        return enno.db.characters?.createLink(modeId, sourceId, targetId, value);
     });
 
     ipcMain.handle("characters:links:update", async (_event, id: string, value: string) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.updateLink(id, value);
+        return enno.db.characters?.updateLink(id, value);
     });
 
     ipcMain.handle("characters:links:delete", async (_event, id: string) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.deleteLink(id);
+        return enno.db.characters?.deleteLink(id);
     });
 }

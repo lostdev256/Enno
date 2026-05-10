@@ -5,48 +5,48 @@ import {enno} from "./../enno";
 export function registerQuestsIpcHandlers() {
     ipcMain.handle("quests:list", async () => {
         if (!enno.db.isOpen) return {groups: [], ungrouped: []};
-        return enno.db.getQuestsList();
+        return enno.db.quests?.getQuestsList();
     });
 
     ipcMain.handle("quests:create", async (_event, parentId?: string, groupId?: string) => {
         if (!enno.db.isOpen) return null;
-        return enno.db.createQuest(parentId, groupId);
+        return enno.db.quests?.createQuest(parentId, groupId);
     });
 
     ipcMain.handle("quests:get", async (_event, id: string) => {
         if (!enno.db.isOpen) return null;
-        return enno.db.getQuest(id);
+        return enno.db.quests?.getQuest(id);
     });
 
     ipcMain.handle("quests:update", async (_event, id: string, field: string, value: string) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.updateQuest(id, field, value);
+        return enno.db.quests?.updateQuest(id, field, value);
     });
 
     ipcMain.handle("quests:delete", async (_event, id: string) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.deleteQuest(id);
+        return enno.db.quests?.deleteQuest(id);
     });
 
     ipcMain.handle("quests:reorder", async (_event, order: any) => {
         if (!enno.db.isOpen) return false;
-        enno.db.reorderQuests(order);
+        enno.db.quests?.reorderQuests(order);
         return true;
     });
 
     ipcMain.handle("quests:group:create", async (_event, name: string) => {
         if (!enno.db.isOpen) return null;
-        return enno.db.createQuestGroup(name);
+        return enno.db.quests?.createQuestGroup(name);
     });
 
     ipcMain.handle("quests:group:delete", async (_event, id: string) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.deleteQuestGroup(id);
+        return enno.db.quests?.deleteQuestGroup(id);
     });
 
     ipcMain.handle("quests:group:rename", async (_event, id: string, name: string) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.renameQuestGroup(id, name);
+        return enno.db.quests?.renameQuestGroup(id, name);
     });
 
     ipcMain.handle("quests:icon:upload", async (_event, questId: string) => {
@@ -56,7 +56,7 @@ export function registerQuestsIpcHandlers() {
             filters: [{name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "gif", "svg"]}]
         });
         if (result.canceled || result.filePaths.length === 0) return {success: false};
-        const iconUrl = enno.db.importQuestIcon(questId, result.filePaths[0]);
+        const iconUrl = enno.db.quests?.importQuestIcon(questId, result.filePaths[0]);
         return {success: true, path: iconUrl};
     });
 
@@ -67,23 +67,23 @@ export function registerQuestsIpcHandlers() {
             filters: [{name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "gif"]}]
         });
         if (result.canceled || result.filePaths.length === 0) return {success: false};
-        const images = enno.db.importQuestGallery(questId, result.filePaths);
+        const images = enno.db.quests?.importQuestGallery(questId, result.filePaths);
         return {success: true, images};
     });
 
     ipcMain.handle("quests:gallery:remove", async (_event, imageId: string) => {
         if (!enno.db.isOpen) return false;
-        return enno.db.removeQuestGalleryImage(imageId);
+        return enno.db.quests?.removeQuestGalleryImage(imageId);
     });
 
     ipcMain.handle("quests:structure:update", async (_event, updates: any[]) => {
         if (!enno.db.isOpen) return false;
-        enno.db.updateQuestsStructure(updates);
+        enno.db.quests?.updateQuestsStructure(updates);
         return true;
     });
 
     ipcMain.handle("quests:all-flat", async () => {
         if (!enno.db.isOpen) return [];
-        return enno.db.getAllQuestsFlat();
+        return enno.db.quests?.getAllQuestsFlat();
     });
 }
