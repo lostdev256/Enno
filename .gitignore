@@ -22,6 +22,7 @@ vite.config.js.timestamp-*
 # --- TypeScript --- #
 *.tsbuildinfo
 *.d.ts
+!src/**/*.d.ts
 
 # --- Google API and secrets --- #
 .env
@@ -51,3 +52,6 @@ yarn-debug.log*
 yarn-error.log*
 .eslintcache
 tmp/
+
+# --- Misc --- #
+*.sqlite
